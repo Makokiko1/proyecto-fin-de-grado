@@ -1,0 +1,44 @@
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #f8f9fa;
+}
+
+/* Efecto hover en las tarjetas */
+.card {
+  transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Precio destacado */
+.card-footer .price {
+  font-weight: bold;
+  color: #d9534f;
+}
+
+/* Botón de agregar */
+.btn-add {
+  width: 100%;
+}
+
+/* Estilos para el menú lateral (offcanvas) */
+#category-menu button {
+  font-size: 1.1rem;
+  border: none;
+  background-color: #ffffff;
+  color: #333;
+  transition: background-color 0.3s;
+  text-align: left;
+}
+
+#category-menu button:hover {
+  background-color: #f0f0f0;
+}
+
+#category-menu button.active {
+  background-color: #333;
+  color: #fff;
+}
