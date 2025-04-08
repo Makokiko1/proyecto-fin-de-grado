@@ -1,16 +1,40 @@
 body {
   font-family: "Arial", sans-serif;
   background-color: #f8f9fa;
+  overflow-x: hidden;
+  animation: fadeInBody 1s ease-in-out;
 }
 
-/* Efecto hover en las tarjetas */
+/* Animación general al cargar */
+@keyframes fadeInBody {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Tarjetas con entrada suave */
 .card {
-  transition: transform 0.3s, box-shadow 0.3s;
+  transition: transform 0.4s ease, box-shadow 0.4s ease;
+  animation: fadeUpCard 0.6s ease-in-out;
 }
 
+@keyframes fadeUpCard {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hover de tarjeta */
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Imagen suave */
+.card img {
+  transition: transform 0.3s ease-in-out;
+}
+
+.card img:hover {
+  transform: scale(1.05);
 }
 
 /* Precio destacado */
@@ -19,26 +43,75 @@ body {
   color: #d9534f;
 }
 
-/* Botón de agregar */
-.btn-add {
-  width: 100%;
+/* Botón de agregar animado */
+.btn-add, .btn-primary, .btn-outline-light, .btn-success, .btn-close, .btn {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-/* Estilos para el menú lateral (offcanvas) */
+.btn-add:hover,
+.btn-primary:hover,
+.btn-outline-light:hover,
+.btn-success:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Botón de categoría */
 #category-menu button {
   font-size: 1.1rem;
   border: none;
   background-color: #ffffff;
   color: #333;
-  transition: background-color 0.3s;
+  transition: background-color 0.3s, padding-left 0.3s;
   text-align: left;
 }
 
 #category-menu button:hover {
   background-color: #f0f0f0;
+  padding-left: 12px;
 }
 
 #category-menu button.active {
   background-color: #333;
   color: #fff;
+}
+
+/* Fade para modal y offcanvas */
+.modal-content, .offcanvas {
+  animation: fadeSlideIn 0.4s ease;
+}
+
+@keyframes fadeSlideIn {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+/* Footer fade-in */
+footer {
+  animation: fadeInFooter 1s ease;
+}
+
+@keyframes fadeInFooter {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Listado de la cesta */
+#cart-items li {
+  animation: fadeItem 0.3s ease-in;
+}
+
+@keyframes fadeItem {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+/* Título principal */
+h1, h2 {
+  animation: popIn 0.6s ease;
+}
+
+@keyframes popIn {
+  0% { opacity: 0; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1); }
 }
