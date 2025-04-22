@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Restaurante Italiano - Carta</title>
+    <!-- Favicon -->
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" type="image/png" />
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
+    <!-- CSS personalizado -->
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <!-- Encabezado -->
+    <header class="container-fluid bg-dark text-white py-3">
+      <div class="container d-flex justify-content-between align-items-center">
+        <!-- Botón para desplegar el menú lateral -->
+        <button
+          class="btn btn-outline-light"
+          type="button"
+          data-bs-toggle="offcanvas"
+          data-bs-target="#offcanvasMenu"
+          aria-controls="offcanvasMenu"
+        >
+          <i class="bi bi-list"></i>
+        </button>
+        <h1 class="mb-0">Restaurante Italiano</h1>
+        <button
+          type="button"
+          class="btn btn-outline-light"
+          data-bs-toggle="modal"
+          data-bs-target="#cartModal"
+        >
+          Mi Cesta (<span id="cart-count">0</span>)
+        </button>
+      </div>
+    </header>
+
+    <!-- Menú lateral de categorías -->
+    <div
+      class="offcanvas offcanvas-start"
+      tabindex="-1"
+      id="offcanvasMenu"
+      aria-labelledby="offcanvasMenuLabel"
+    >
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasMenuLabel">Categorías</h5>
+        <button
+          type="button"
+          class="btn-close text-reset"
+          data-bs-dismiss="offcanvas"
+          aria-label="Cerrar"
+        ></button>
+      </div>
+      <div class="offcanvas-body">
+        <div class="list-group" id="category-menu">
+          <!-- Se generarán dinámicamente los botones: "Todos" y las categorías -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Carta: Productos -->
+    <main class="container my-5">
+      <h2 class="text-center mb-4">Nuestra Carta</h2>
+      <div id="menu-container" class="row g-4"></div>
+    </main>
+
+    <!-- Modal de Cesta -->
+    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="cartModalLabel">Mi Cesta</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <ul id="cart-items" class="list-group"></ul>
+            <div id="cart-empty" class="text-center py-3">La cesta está vacía.</div>
+            <p class="text-end mt-3 fw-bold">Total: <span id="total-precio">$0.00</span></p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" id="order-button">Pedir</button>
+            <button type="button" class="btn btn-primary" id="bill-button">Solicitar cuenta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Personalización de Ingredientes -->
+    <div class="modal fade" id="customizationModal" tabindex="-1" aria-labelledby="customizationModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="customizationModalLabel">Personaliza tu plato</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            <div id="ingredients-container">
+              <!-- Se llenará dinámicamente con los ingredientes y controles -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" id="save-customization">Añadir a la Cesta</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="container-fluid bg-light text-center py-3">
+      <p class="mb-0">© 2025 Restaurante Italiano. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Script personalizado -->
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -1,9 +1,15 @@
+/*
+  Este archivo incluye el código existente y las nuevas funciones para que,
+  al pulsar “Añadir”, se abra un modal que permita personalizar el plato
+  (quitando o sumando extras a los ingredientes) antes de agregar a la cesta.
+*/
+
 // ========================
 // Configuración de Supabase
 // ========================
 const supabaseUrl = "https://slopghtwuyodfycfwngv.supabase.co";
-const supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsb3BnaHR3dXlvZGZ5Y2Z3bmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODE3NDYsImV4cCI6MjA1OTM1Nzc0Nn0.fvKYIoFQt46We1-27DlFxYqvp3Kkdi7KFK76JwXUTCg";
-
+const supabaseAnonKey =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsb3BnaHR3dXlvZGZ5Y2Z3bmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODE3NDYsImV4cCI6MjA1OTM1Nzc0Nn0.fvKYIoFQt46We1-27DlFxYqvp3Kkdi7KFK76JwXUTCg";
 const { createClient } = window.supabase;
 const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -13,6 +19,10 @@ const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 let allCategories = [];
 let allMenuItems = [];
 let cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
+
+// Variables para la personalización del plato
+let productoPersonalizando = null;
+let ingredientesPersonalizados = [];
 
 // ========================
 // Inicializar al cargar el DOM
@@ -25,6 +35,11 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupSearchBar();
   updateCartDisplay();
   setupOrderButtons();
+
+  // Configurar el botón de guardar personalización
+  document
+    .getElementById("save-customization")
+    .addEventListener("click", guardarPersonalizacion);
 });
 
 // ========================
@@ -124,7 +139,7 @@ function displayMenuItems(categoryId) {
           <h5 class="card-title">${item.name}</h5>
           <p class="card-text">${item.description}</p>
           <p class="fw-bold text-success">$${parseFloat(item.price).toFixed(2)}</p>
-          <button class="btn btn-primary mt-auto" onclick="agregarACesta(${item.id})">
+          <button class="btn btn-primary mt-auto" onclick="mostrarPersonalizacion(${item.id})">
             Añadir
           </button>
         </div>
@@ -135,25 +150,203 @@ function displayMenuItems(categoryId) {
 }
 
 // ========================
-// Añadir producto a la cesta
+// Añadir producto a la cesta (sin personalización directa)
 // ========================
-function agregarACesta(id) {
-  const product = allMenuItems.find((item) => item.id === id);
-  if (!product) return;
+function agregarACesta(producto, personalizacion = null) {
+  // Si hay personalización se adjunta a producto
+  const productoParaCesta = {
+    ...producto,
+    personalizacion,
+  };
 
-  const existingItem = cartItems.find((item) => item.id === id);
-  if (existingItem) {
-    existingItem.quantity += 1;
+  // Verificar si ya existe en la cesta (se compara el id y la personalización)
+  const indexExistente = cartItems.findIndex(
+    (item) =>
+      item.id === producto.id &&
+      JSON.stringify(item.personalizacion) === JSON.stringify(personalizacion)
+  );
+
+  if (indexExistente >= 0) {
+    cartItems[indexExistente].quantity += 1;
   } else {
-    cartItems.push({ ...product, quantity: 1 });
+    cartItems.push({ ...productoParaCesta, quantity: 1 });
   }
   saveCartToLocalStorage();
   updateCartDisplay();
-  showToast(`"${product.name}" añadido a la cesta`);
+  showToast(`"${producto.name}" añadido a la cesta`);
 }
 
 // ========================
-//  Actualizar visualización de la cesta
+// Funciones para el Modal de Personalización
+// ========================
+
+// Mostrar modal de personalización del plato
+async function mostrarPersonalizacion(menuItemId) {
+  const producto = allMenuItems.find((item) => item.id === menuItemId);
+  if (!producto) return;
+
+  productoPersonalizando = producto;
+
+  try {
+    // Se consulta la tabla de relación con la información de los ingredientes
+    const { data, error } = await supabaseClient
+      .from("menu_item_ingredientes")
+      .select("*, ingredientes(*)")
+      .eq("menu_item_id", menuItemId);
+    if (error) throw error;
+
+    // Reiniciar la configuración personalizada
+    ingredientesPersonalizados = [];
+    renderIngredientesPersonalizacion(data);
+
+    // Mostrar el modal de personalización
+    const customizationModal = new bootstrap.Modal(
+      document.getElementById("customizationModal")
+    );
+    customizationModal.show();
+  } catch (err) {
+    console.error("Error al obtener ingredientes: ", err.message);
+    alert("No se pudieron cargar los ingredientes del plato.");
+  }
+}
+
+// Renderizar controles para cada ingrediente en el modal
+function renderIngredientesPersonalizacion(ingredientesData) {
+  const container = document.getElementById("ingredients-container");
+  container.innerHTML = "";
+
+  ingredientesData.forEach((ingredienteRel) => {
+    const ingrediente = ingredienteRel.ingredientes;
+
+    // Contenedor por cada ingrediente
+    const div = document.createElement("div");
+    div.classList.add("mb-3", "border", "p-2", "rounded");
+
+    // Título del ingrediente
+    const title = document.createElement("h6");
+    title.textContent = ingrediente.nombre;
+    div.appendChild(title);
+
+    // Contenedor de controles
+    const controlsDiv = document.createElement("div");
+    controlsDiv.classList.add("d-flex", "align-items-center");
+
+    // Si se permite quitar, se agrega checkbox
+    if (ingredienteRel.permite_quitar) {
+      const quitarLabel = document.createElement("label");
+      quitarLabel.classList.add("me-2");
+      quitarLabel.textContent = "Quitar:";
+
+      const quitarCheckbox = document.createElement("input");
+      quitarCheckbox.type = "checkbox";
+      quitarCheckbox.classList.add("ms-2");
+      quitarCheckbox.dataset.ingredienteId = ingrediente.id;
+      quitarCheckbox.addEventListener("change", (e) => {
+        const existe = ingredientesPersonalizados.find(
+          (item) => item.ingredienteId === ingrediente.id
+        );
+        if (e.target.checked) {
+          if (existe) {
+            existe.cantidad = 0;
+          } else {
+            ingredientesPersonalizados.push({
+              ingredienteId: ingrediente.id,
+              cantidad: 0,
+              extra: 0,
+            });
+          }
+        } else {
+          if (existe) {
+            existe.cantidad = ingredienteRel.cantidad_default;
+          } else {
+            ingredientesPersonalizados.push({
+              ingredienteId: ingrediente.id,
+              cantidad: ingredienteRel.cantidad_default,
+              extra: 0,
+            });
+          }
+        }
+      });
+      controlsDiv.appendChild(quitarLabel);
+      controlsDiv.appendChild(quitarCheckbox);
+    }
+
+    // Mostrar cantidad por defecto
+    const cantidadSpan = document.createElement("span");
+    cantidadSpan.classList.add("ms-3", "me-2");
+    cantidadSpan.textContent = `Cantidad: ${ingredienteRel.cantidad_default}`;
+    controlsDiv.appendChild(cantidadSpan);
+
+    // Si se permite extra, se agregan controles para sumar/restar
+    if (ingredienteRel.permite_extra) {
+      const extraLabel = document.createElement("span");
+      extraLabel.textContent = "Extra:";
+      extraLabel.classList.add("me-2");
+      controlsDiv.appendChild(extraLabel);
+
+      // Botón para restar extra
+      const btnRestar = document.createElement("button");
+      btnRestar.type = "button";
+      btnRestar.classList.add("btn", "btn-sm", "btn-outline-secondary", "me-1");
+      btnRestar.textContent = "-";
+      btnRestar.dataset.ingredienteId = ingrediente.id;
+      btnRestar.addEventListener("click", () => ajustarExtra(ingrediente.id, -1));
+      controlsDiv.appendChild(btnRestar);
+
+      // Mostrar cantidad extra (inicia en 0)
+      const extraCountSpan = document.createElement("span");
+      extraCountSpan.textContent = "0";
+      extraCountSpan.id = `extra-count-${ingrediente.id}`;
+      extraCountSpan.classList.add("me-1");
+      controlsDiv.appendChild(extraCountSpan);
+
+      // Botón para sumar extra
+      const btnSumar = document.createElement("button");
+      btnSumar.type = "button";
+      btnSumar.classList.add("btn", "btn-sm", "btn-outline-secondary");
+      btnSumar.textContent = "+";
+      btnSumar.dataset.ingredienteId = ingrediente.id;
+      btnSumar.addEventListener("click", () => ajustarExtra(ingrediente.id, 1));
+      controlsDiv.appendChild(btnSumar);
+    }
+
+    div.appendChild(controlsDiv);
+    container.appendChild(div);
+
+    // Inicializar registro en la configuración personalizada si no existe
+    if (!ingredientesPersonalizados.find((item) => item.ingredienteId === ingrediente.id)) {
+      ingredientesPersonalizados.push({
+        ingredienteId: ingrediente.id,
+        cantidad: ingredienteRel.cantidad_default,
+        extra: 0,
+      });
+    }
+  });
+}
+
+// Ajustar la cantidad de extra para un ingrediente
+function ajustarExtra(ingredienteId, cambio) {
+  const spanExtra = document.getElementById(`extra-count-${ingredienteId}`);
+  let registro = ingredientesPersonalizados.find((item) => item.ingredienteId === ingredienteId);
+  if (!registro) {
+    registro = { ingredienteId: ingredienteId, cantidad: 0, extra: 0 };
+    ingredientesPersonalizados.push(registro);
+  }
+  registro.extra = Math.max(0, registro.extra + cambio);
+  spanExtra.textContent = registro.extra;
+}
+
+// Guardar la personalización y agregar el producto a la cesta
+function guardarPersonalizacion() {
+  agregarACesta(productoPersonalizando, ingredientesPersonalizados);
+  // Cerrar el modal de personalización
+  const customizationModalElement = document.getElementById("customizationModal");
+  const modalInstance = bootstrap.Modal.getInstance(customizationModalElement);
+  modalInstance.hide();
+}
+
+// ========================
+// Actualizar visualización de la cesta
 // ========================
 function updateCartDisplay() {
   const count = cartItems.reduce((acc, item) => acc + item.quantity, 0);
@@ -164,12 +357,33 @@ function updateCartDisplay() {
 
   cartItems.forEach((item) => {
     const li = document.createElement("li");
-    li.classList.add("list-group-item", "d-flex", "justify-content-between", "align-items-center");
+    li.classList.add(
+      "list-group-item",
+      "d-flex",
+      "justify-content-between",
+      "align-items-center"
+    );
+    // Si existe personalización se muestra (aquí se muestra de forma resumida)
+    let personalizacionText = "";
+    if (item.personalizacion) {
+      personalizacionText =
+        "<br><small>Personalización: " +
+        item.personalizacion
+          .map(
+            (p) =>
+              "Ingrediente " +
+              p.ingredienteId +
+              " -> Cantidad: " +
+              (p.cantidad + (p.extra || 0))
+          )
+          .join(", ") +
+        "</small>";
+    }
     li.innerHTML = `
-      ${item.name} x ${item.quantity}
+      ${item.name} x ${item.quantity} ${personalizacionText}
       <span>$${(item.price * item.quantity).toFixed(2)}</span>
     `;
-    // Agregar botón para eliminar el item
+    // Botón para eliminar el producto
     const deleteBtn = document.createElement("button");
     deleteBtn.classList.add("btn", "btn-danger", "btn-sm");
     deleteBtn.innerHTML = `<i class="bi bi-trash"></i>`;
@@ -197,13 +411,13 @@ function saveCartToLocalStorage() {
 // Eliminar un producto de la cesta
 // ========================
 function eliminarDeCesta(id) {
-  cartItems = cartItems.filter(item => item.id !== id);
+  cartItems = cartItems.filter((item) => item.id !== id);
   saveCartToLocalStorage();
   updateCartDisplay();
 }
 
 // ========================
-//  Botón de abrir cesta 
+// Botón para abrir la cesta
 // ========================
 function setupCartButton() {
   const cartBtn = document.getElementById("open-cart");
@@ -220,7 +434,8 @@ function setupCartButton() {
 // ========================
 function showToast(message) {
   const toast = document.createElement("div");
-  toast.className = "toast align-items-center text-bg-primary border-0 show position-fixed top-0 end-0 m-3";
+  toast.className =
+    "toast align-items-center text-bg-primary border-0 show position-fixed top-0 end-0 m-3";
   toast.role = "alert";
   toast.style.zIndex = 9999;
   toast.innerHTML = `
@@ -243,7 +458,7 @@ function setupSearchBar() {
   if (!searchBar) return;
   searchBar.addEventListener("input", function (e) {
     const query = e.target.value.toLowerCase();
-    const filtered = allMenuItems.filter(item =>
+    const filtered = allMenuItems.filter((item) =>
       item.name.toLowerCase().includes(query)
     );
     renderSearchResults(filtered);
@@ -273,7 +488,7 @@ function renderSearchResults(items) {
           <h5 class="card-title">${item.name}</h5>
           <p class="card-text">${item.description}</p>
           <p class="fw-bold text-success">$${parseFloat(item.price).toFixed(2)}</p>
-          <button class="btn btn-primary mt-auto" onclick="agregarACesta(${item.id})">
+          <button class="btn btn-primary mt-auto" onclick="mostrarPersonalizacion(${item.id})">
             Añadir
           </button>
         </div>
@@ -305,4 +520,25 @@ function setupOrderButtons() {
     saveCartToLocalStorage();
     updateCartDisplay();
   });
+  async function mostrarUsuario() {
+    const { data, error } = await supabaseClient.auth.getUser();
+    const header = document.querySelector("header .container");
+  
+    if (data?.user?.user_metadata?.full_name) {
+      const name = data.user.user_metadata.full_name;
+      const nombreUsuario = document.createElement("span");
+      nombreUsuario.className = "text-white fw-bold ms-3";
+      nombreUsuario.innerHTML = `Hola, ${name}`;
+      header.appendChild(nombreUsuario);
+    } else if (localStorage.getItem("guest") === "true") {
+      const nombreUsuario = document.createElement("span");
+      nombreUsuario.className = "text-white fw-bold ms-3";
+      nombreUsuario.innerHTML = `Hola, Invitado`;
+      header.appendChild(nombreUsuario);
+    }
+  }
+  
+  // Llamar a la función al cargar el DOM
+  document.addEventListener("DOMContentLoaded", mostrarUsuario);
+  
 }

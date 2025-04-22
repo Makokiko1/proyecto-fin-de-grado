@@ -3,102 +3,306 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Restaurante Italiano - Carta</title>
-    <!-- Favicon -->
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3075/3075977.png" type="image/png" />
+    <title>Iniciar Sesión / Registro - Restaurante</title>
     <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
     <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" />
-    <!-- CSS personalizado -->
-    <link rel="stylesheet" href="style.css" />
-  </head>
-  <body>
-    <!-- Encabezado -->
-    <header class="container-fluid bg-dark text-white py-3">
-      <div class="container d-flex justify-content-between align-items-center">
-        <!-- Botón para desplegar el menú lateral  -->
-        <button
-          class="btn btn-outline-light"
-          type="button"
-          data-bs-toggle="offcanvas"
-          data-bs-target="#offcanvasMenu"
-          aria-controls="offcanvasMenu"
-        >
-          <i class="bi bi-list"></i>
-        </button>
-        <h1 class="mb-0">Restaurante Italiano</h1>
-        <button
-          type="button"
-          class="btn btn-outline-light"
-          data-bs-toggle="modal"
-          data-bs-target="#cartModal"
-        >
-          Mi Cesta (<span id="cart-count">0</span>)
-        </button>
-      </div>
-    </header>
-
-    <!-- Menú lateral de categorías -->
-    <div
-      class="offcanvas offcanvas-start"
-      tabindex="-1"
-      id="offcanvasMenu"
-      aria-labelledby="offcanvasMenuLabel"
-    >
-      <div class="offcanvas-header">
-        <h5 class="offcanvas-title" id="offcanvasMenuLabel">Categorías</h5>
-        <button
-          type="button"
-          class="btn-close text-reset"
-          data-bs-dismiss="offcanvas"
-          aria-label="Cerrar"
-        ></button>
-      </div>
-      <div class="offcanvas-body">
-        <div class="list-group" id="category-menu">
-          <!-- Se generarán dinámicamente los botones: "Todos" y las categorías -->
-        </div>
-      </div>
-    </div>
-
-    <!-- Carta: Productos -->
-    <main class="container my-5">
-      <h2 class="text-center mb-4">Nuestra Carta</h2>
-      <div id="menu-container" class="row g-4"></div>
-    </main>
-
-    <!-- Modal de Cesta -->
-    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="cartModalLabel">Mi Cesta</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <ul id="cart-items" class="list-group"></ul>
-            <div id="cart-empty" class="text-center py-3">La cesta está vacía.</div>
-            <p class="text-end mt-3 fw-bold">Total: <span id="total-precio">$0.00</span></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-success" id="order-button">Pedir</button>
-            <button type="button" class="btn btn-primary" id="bill-button">Solicitar cuenta</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="container-fluid bg-light text-center py-3">
-      <p class="mb-0">© 2025 Restaurante Italiano. Todos los derechos reservados.</p>
-    </footer>
-
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css"
+      rel="stylesheet"
+    />
     <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <!-- bcryptjs para hash de contraseñas -->
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+  </head>
+  <body class="bg-light d-flex align-items-center justify-content-center vh-100">
+    <div class="card p-4 shadow" style="max-width: 420px; width: 100%;">
+      <h2 class="text-center mb-3">Bienvenido</h2>
+      <p class="text-center text-muted">Elige cómo quieres acceder</p>
+
+      <div class="d-grid gap-2 mb-3">
+        <button id="login-google" class="btn btn-outline-danger">
+          <i class="bi bi-google me-2"></i> Iniciar con Google
+        </button>
+        <button id="login-facebook" class="btn btn-outline-primary">
+          <i class="bi bi-facebook me-2"></i> Iniciar con Facebook
+        </button>
+        <button id="guest-login" class="btn btn-secondary">
+          Continuar como Invitado
+        </button>
+      </div>
+
+      <hr />
+
+      <div class="d-grid gap-2">
+        <button
+          class="btn btn-outline-dark"
+          data-bs-toggle="modal"
+          data-bs-target="#loginLocalModal"
+        >
+          <i class="bi bi-person-fill me-2"></i> Iniciar con Cuenta
+        </button>
+        <button
+          class="btn btn-outline-success"
+          data-bs-toggle="modal"
+          data-bs-target="#registerModal"
+        >
+          <i class="bi bi-pencil-square me-2"></i> Registrarse
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal: Login Local -->
+    <div
+      class="modal fade"
+      id="loginLocalModal"
+      tabindex="-1"
+      aria-labelledby="loginLocalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="loginLocalLabel" class="modal-title">Iniciar Sesión</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="login-email" class="form-label">Email</label>
+              <input
+                type="email"
+                id="login-email"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="login-password" class="form-label">Contraseña</label>
+              <input
+                type="password"
+                id="login-password"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              id="loginLocalSubmit"
+              class="btn btn-primary"
+            >
+              Entrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal: Registro -->
+    <div
+      class="modal fade"
+      id="registerModal"
+      tabindex="-1"
+      aria-labelledby="registerLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="registerLabel" class="modal-title">Registro</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="reg-username" class="form-label">Usuario</label>
+              <input
+                type="text"
+                id="reg-username"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="reg-email" class="form-label">Email</label>
+              <input
+                type="email"
+                id="reg-email"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="reg-password" class="form-label">Contraseña</label>
+              <input
+                type="password"
+                id="reg-password"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label
+                for="reg-password-confirm"
+                class="form-label"
+                >Confirmar Contraseña</label
+              >
+              <input
+                type="password"
+                id="reg-password-confirm"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              id="registerSubmit"
+              class="btn btn-success"
+            >
+              Registrarse
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Script personalizado -->
-    <script src="script.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const bcrypt = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt);
+    if (!bcrypt) {
+      console.error("❌ bcryptjs no se ha cargado correctamente");
+      alert("Error interno: bcryptjs no disponible");
+      return;
+    }
+          console.log("📄 DOM cargado, inicializando auth");
+      
+          // — Configura tu Supabase
+          const supabaseUrl = "https://slopghtwuyodfycfwngv.supabase.co";
+          const supabaseAnonKey =
+            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsb3BnaHR3dXlvZGZ5Y2Z3bmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODE3NDYsImV4cCI6MjA1OTM1Nzc0Nn0.fvKYIoFQt46We1-27DlFxYqvp3Kkdi7KFK76JwXUTCg";
+          const { createClient } = window.supabase;
+          const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+      
+          // — OAuth + Invitado
+          document.getElementById("login-google").addEventListener("click", async () => {
+            console.log("🔎 Google login");
+            try {
+              await supabaseClient.auth.signInWithOAuth({
+                provider: "google",
+                options: { redirectTo: `${window.location.origin}/restaurante.html` },
+              });
+            } catch (e) {
+              console.error("OAuth Google error:", e);
+              alert("Error Google: " + e.message);
+            }
+          });
+          document.getElementById("login-facebook").addEventListener("click", async () => {
+            console.log("🔎 Facebook login");
+            try {
+              await supabaseClient.auth.signInWithOAuth({
+                provider: "facebook",
+                options: { redirectTo: `${window.location.origin}/restaurante.html` },
+              });
+            } catch (e) {
+              console.error("OAuth Facebook error:", e);
+              alert("Error Facebook: " + e.message);
+            }
+          });
+          document.getElementById("guest-login").addEventListener("click", () => {
+            console.log("🚶 Invitado");
+            localStorage.setItem("guest", "true");
+            window.location.href = "restaurante.html";
+          });
+      
+          // — Registro nuevo usuario
+          document.getElementById("registerSubmit").addEventListener("click", async () => {
+            console.log("📝 Registro pulsado");
+            try {
+              const username = document.getElementById("reg-username").value.trim();
+              const email = document.getElementById("reg-email").value.trim();
+              const pass = document.getElementById("reg-password").value;
+              const pass2 = document.getElementById("reg-password-confirm").value;
+      
+              if (!username || !email || !pass) {
+                return alert("❗ Rellena todos los campos.");
+              }
+              if (pass !== pass2) {
+                return alert("❗ Las contraseñas no coinciden.");
+              }
+      
+              // Hash de la contraseña (solo demo en cliente)
+              const hash = bcrypt.hashSync(pass, 10);
+      
+              console.log("🔗 Insertando en usuarios…", { username, email });
+              const { data, error } = await supabaseClient
+                .from("usuarios")
+                .insert([{ username, email, password_hash: hash, role: "cliente" }]);
+      
+              if (error) throw error;
+              console.log("✅ Registro OK", data);
+      
+              // Auto-login y redirigir
+              localStorage.setItem("user", JSON.stringify({ username, email }));
+              window.location.href = "restaurante.html";
+      
+            } catch (err) {
+              console.error("❌ Error en registro:", err);
+              alert("No se pudo registrar: " + err.message);
+            }
+          });
+      
+          // — Login con cuenta propia
+          document.getElementById("loginLocalSubmit").addEventListener("click", async () => {
+            console.log("🔐 Login local pulsado");
+            try {
+              const email = document.getElementById("login-email").value.trim();
+              const pass = document.getElementById("login-password").value;
+              if (!email || !pass) return alert("❗ Rellena todos los campos.");
+      
+              const { data: user, error } = await supabaseClient
+                .from("usuarios")
+                .select("*")
+                .eq("email", email)
+                .single();
+              if (error || !user) {
+                console.error("🕵️ Usuario no hallado:", error);
+                return alert("Usuario no encontrado.");
+              }
+      
+              if (!bcrypt.compareSync(pass, user.password_hash)) {
+                return alert("❗ Contraseña incorrecta.");
+              }
+      
+              console.log("✅ Login local OK", user);
+              localStorage.setItem(
+                "user",
+                JSON.stringify({ username: user.username, email: user.email })
+              );
+              window.location.href = "restaurante.html";
+            } catch (err) {
+              console.error("❌ Error en login local:", err);
+              alert("Error al iniciar sesión: " + err.message);
+            }
+          });
+        });
+      </script>
+      
   </body>
 </html>
