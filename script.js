@@ -7,11 +7,12 @@
 // ========================
 // Configuración de Supabase
 // ========================
+
 const supabaseUrl = "https://slopghtwuyodfycfwngv.supabase.co";
 const supabaseAnonKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsb3BnaHR3dXlvZGZ5Y2Z3bmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODE3NDYsImV4cCI6MjA1OTM1Nzc0Nn0.fvKYIoFQt46We1-27DlFxYqvp3Kkdi7KFK76JwXUTCg";
-const { createClient } = window.supabase;
-const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
+  const { createClient } = window.supabase;
+  const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
 // ========================
 // Variables globales
