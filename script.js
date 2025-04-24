@@ -499,16 +499,91 @@ function renderSearchResults(items) {
   });
 }
 
+
 // ========================
 // Botones para procesar pedido y cuenta
 // ========================
 function setupOrderButtons() {
   const orderButton = document.getElementById("order-button");
-  const billButton = document.getElementById("bill-button");
+  const billButton  = document.getElementById("bill-button");
 
-  orderButton.addEventListener("click", () => {
+  orderButton.addEventListener("click", async () => {
     if (cartItems.length === 0) return alert("Tu cesta está vacía.");
-    alert("¡Pedido realizado! Gracias por tu compra.");
+
+    // 1) Obtener usuario
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData) return alert("Debes iniciar sesión para pedir.");
+
+    const { data: usuario, error: userErr } = await supabaseClient
+      .from("usuarios")
+      .select("id")
+      .eq("email", userData.email)
+      .single();
+    if (userErr) {
+      console.error(userErr);
+      return alert("Error identificando usuario.");
+    }
+
+    // 2) Contar pedidos del mes
+    const now = new Date();
+    const mes  = now.getMonth() + 1;
+    const anio = now.getFullYear();
+    const fechaInicio = `${anio}-${mes.toString().padStart(2, "0")}-01`;
+
+    const { data: pedidosMes, error: countErr } = await supabaseClient
+      .from("pedidos")
+      .select("id", { count: "exact" })
+      .eq("usuario_id", usuario.id)
+      .gte("fecha", fechaInicio);
+    if (countErr) {
+      console.error(countErr);
+      return alert("No se pudo comprobar historial de pedidos.");
+    }
+
+    const pedidosPrevios = pedidosMes.length;
+    const numeroPedido   = pedidosPrevios + 1;
+    const aplicaDescuento = numeroPedido % 10 === 0;
+
+    // 3) Calcular totales y descuento
+    const totalOriginal = cartItems.reduce((sum, itm) => sum + itm.price * itm.quantity, 0);
+    let descuentoValor  = 0;
+    let totalFinal      = totalOriginal;
+
+    if (aplicaDescuento) {
+      descuentoValor = totalOriginal * 0.30;
+      totalFinal     = totalOriginal - descuentoValor;
+    }
+
+    // 4) Insertar en pedidos
+    const { error: insertErr } = await supabaseClient
+      .from("pedidos")
+      .insert({
+        usuario_id: usuario.id,
+        total: totalFinal.toFixed(2),
+        aplica_descuento: aplicaDescuento,
+        descuento_aplicado: descuentoValor.toFixed(2),
+        items: cartItems
+      });
+    if (insertErr) {
+      console.error(insertErr);
+      return alert("Error al guardar el pedido.");
+    }
+
+    // 5) Actualizar UI y mensaje
+    const importeTexto = `$${totalFinal.toFixed(2)}`;
+    if (aplicaDescuento) {
+      // Mostrar precio tachado y nuevo precio con estilo
+      const totalSpan = document.getElementById("total-precio");
+      totalSpan.innerHTML = `
+        <del>$${totalOriginal.toFixed(2)}</del>
+        <span class="text-success fw-bold ms-2">${importeTexto}</span>
+      `;
+      showToast(`🎉 ¡Pedido #${numeroPedido}! 30% de descuento aplicado. A pagar: ${importeTexto}`);
+    } else {
+      alert(`Pedido #${numeroPedido} realizado. Total a pagar: ${importeTexto}`);
+    }
+
+    // Limpiar carrito
     cartItems = [];
     saveCartToLocalStorage();
     updateCartDisplay();
@@ -516,30 +591,10 @@ function setupOrderButtons() {
 
   billButton.addEventListener("click", () => {
     if (cartItems.length === 0) return alert("No hay nada que cobrar.");
-    alert(`Total a pagar: ${document.getElementById("total-precio").textContent}`);
+    const total = document.getElementById("total-precio").textContent;
+    alert(`Total a pagar: ${total}`);
     cartItems = [];
     saveCartToLocalStorage();
     updateCartDisplay();
   });
-  async function mostrarUsuario() {
-    const { data, error } = await supabaseClient.auth.getUser();
-    const header = document.querySelector("header .container");
-  
-    if (data?.user?.user_metadata?.full_name) {
-      const name = data.user.user_metadata.full_name;
-      const nombreUsuario = document.createElement("span");
-      nombreUsuario.className = "text-white fw-bold ms-3";
-      nombreUsuario.innerHTML = `Hola, ${name}`;
-      header.appendChild(nombreUsuario);
-    } else if (localStorage.getItem("guest") === "true") {
-      const nombreUsuario = document.createElement("span");
-      nombreUsuario.className = "text-white fw-bold ms-3";
-      nombreUsuario.innerHTML = `Hola, Invitado`;
-      header.appendChild(nombreUsuario);
-    }
-  }
-  
-  // Llamar a la función al cargar el DOM
-  document.addEventListener("DOMContentLoaded", mostrarUsuario);
-  
 }
