@@ -36,6 +36,15 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupSearchBar();
   updateCartDisplay();
   setupOrderButtons();
+  // Mostrar saludo personalizado
+const userInfo = JSON.parse(localStorage.getItem("user"));
+if (userInfo && userInfo.username) {
+  const userWelcome = document.getElementById("user-welcome");
+  if (userWelcome) {
+    userWelcome.textContent = `¡Hola, ${userInfo.username}!`;
+  }
+}
+
 
   // Configurar el botón de guardar personalización
   document
@@ -396,7 +405,16 @@ function updateCartDisplay() {
     cartItemsList.appendChild(li);
   });
 
-  const totalPrice = cartItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const totalPrice = cartItems.reduce((acc, item) => {
+    let extrasCost = 0;
+  
+    if (item.personalizacion) {
+      extrasCost = item.personalizacion.reduce((sum, ing) => sum + (ing.extra || 0), 0);
+    }
+  
+    return acc + (item.price + extrasCost) * item.quantity;
+  }, 0);
+  
   document.getElementById("total-precio").textContent = `$${totalPrice.toFixed(2)}`;
 
   const cartEmptyMessage = document.getElementById("cart-empty");
