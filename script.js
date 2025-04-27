@@ -543,8 +543,17 @@ function setupOrderButtons() {
     }
 
     const pedidosPrevios = pedidosMes.length;
-    const numeroPedido   = pedidosPrevios + 1;
-    const aplicaDescuento = numeroPedido % 10 === 0;
+    const numeroPedido = pedidosPrevios + 1;
+
+// Condición extra: si el usuario es el Invitado, no hay descuento
+const esInvitado = (
+  userData.email === 'invitado@restaurante.com' || 
+  userData.username === 'Invitado'
+);
+
+// Aplicar 30% solo si es múltiplo de 10 **y** NO es el usuario Invitado
+const aplicaDescuento = (numeroPedido % 10 === 0) && !esInvitado;
+
 
     // 3) Calcular totales y descuento
     const totalOriginal = cartItems.reduce((sum, itm) => sum + itm.price * itm.quantity, 0);

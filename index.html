@@ -228,10 +228,18 @@
             }
           });
           document.getElementById("guest-login").addEventListener("click", () => {
-            console.log("🚶 Invitado");
-            localStorage.setItem("guest", "true");
-            window.location.href = "restaurante.html";
-          });
+  console.log("🚶 Invitado");
+  localStorage.setItem("guest", "true");
+  localStorage.setItem(
+    "user",
+    JSON.stringify({
+      username: "Invitado",
+      email: "invitado@restaurante.com"
+    })
+  );
+  window.location.href = "restaurante.html";
+});
+
       
           // — Registro nuevo usuario
           document.getElementById("registerSubmit").addEventListener("click", async () => {
