@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Iniciar Sesión / Registro - Restaurante</title>
+    <title>Iniciar Sesión / Registro / Recuperar Contraseña - Restaurante</title>
     <link rel="stylesheet" href="inicioSesion.css" />
 
     <!-- Bootstrap CSS -->
@@ -20,6 +20,12 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <!-- bcryptjs para hash de contraseñas -->
     <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <!-- EmailJS para envío de correos -->
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@2/dist/email.min.js"></script>
+    <!-- Inicialización de EmailJS con tu Public Key -->
+    <script>
+      emailjs.init('q9SBnt8B-rM5ezolt');
+    </script>
   </head>
   <body class="bg-light d-flex align-items-center justify-content-center vh-100">
     <div class="card p-4 shadow" style="max-width: 420px; width: 100%;">
@@ -94,6 +100,15 @@
                 class="form-control"
                 required
               />
+            </div>
+            <div class="text-end">
+              <button
+                type="button"
+                id="forgot-password"
+                class="btn btn-link p-0"
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
             </div>
           </div>
           <div class="modal-footer">
@@ -182,137 +197,286 @@
       </div>
     </div>
 
+    <!-- Recuperar contraseña: Paso 1 -->
+    <div
+      class="modal fade"
+      id="recuperarModal"
+      tabindex="-1"
+      aria-labelledby="recuperarLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="recuperarLabel" class="modal-title">
+              Recuperar Contraseña
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="recup-email" class="form-label">
+                Email registrado
+              </label>
+              <input
+                type="email"
+                id="recup-email"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              id="sendCodeBtn"
+              class="btn btn-primary"
+            >
+              Enviar Código
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recuperar contraseña: Paso 2 -->
+    <div
+      class="modal fade"
+      id="codigoModal"
+      tabindex="-1"
+      aria-labelledby="codigoLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="codigoLabel" class="modal-title">
+              Código de Recuperación
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p id="codigoInstructions" class="text-muted"></p>
+            <div class="mb-3">
+              <label for="input-code" class="form-label">
+                Código (6 dígitos)
+              </label>
+              <input
+                type="text"
+                id="input-code"
+                class="form-control"
+                maxlength="6"
+                required
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              id="verifyCodeBtn"
+              class="btn btn-primary"
+            >
+              Verificar Código
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recuperar contraseña: Paso 3 -->
+    <div
+      class="modal fade"
+      id="cambiarModal"
+      tabindex="-1"
+      aria-labelledby="cambiarLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="cambiarLabel" class="modal-title">
+              Cambiar Contraseña
+            </h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="new-password" class="form-label">
+                Nueva Contraseña
+              </label>
+              <input
+                type="password"
+                id="new-password"
+                class="form-control"
+                required
+              />
+            </div>
+            <div class="mb-3">
+              <label for="confirm-password" class="form-label">
+                Confirmar Contraseña
+              </label>
+              <input
+                type="password"
+                id="confirm-password"
+                class="form-control"
+                required
+              />
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              id="changePasswordBtn"
+              class="btn btn-success"
+            >
+              Cambiar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Script personalizado -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            const bcrypt = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt);
-    if (!bcrypt) {
-      console.error("❌ bcryptjs no se ha cargado correctamente");
-      alert("Error interno: bcryptjs no disponible");
-      return;
-    }
-          console.log("📄 DOM cargado, inicializando auth");
-      
-          // — Configura tu Supabase
-          const supabaseUrl = "https://slopghtwuyodfycfwngv.supabase.co";
-          const supabaseAnonKey =
-            "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsb3BnaHR3dXlvZGZ5Y2Z3bmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODE3NDYsImV4cCI6MjA1OTM1Nzc0Nn0.fvKYIoFQt46We1-27DlFxYqvp3Kkdi7KFK76JwXUTCg";
-          const { createClient } = window.supabase;
-          const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
-      
-          // — OAuth + Invitado
-          document.getElementById("login-google").addEventListener("click", async () => {
-            console.log("🔎 Google login");
-            try {
-              await supabaseClient.auth.signInWithOAuth({
-                provider: "google",
-                options: { redirectTo: `${window.location.origin}/restaurante.html` },
-              });
-            } catch (e) {
-              console.error("OAuth Google error:", e);
-              alert("Error Google: " + e.message);
-            }
-          });
-          document.getElementById("login-facebook").addEventListener("click", async () => {
-            console.log("🔎 Facebook login");
-            try {
-              await supabaseClient.auth.signInWithOAuth({
-                provider: "facebook",
-                options: { redirectTo: `${window.location.origin}/restaurante.html` },
-              });
-            } catch (e) {
-              console.error("OAuth Facebook error:", e);
-              alert("Error Facebook: " + e.message);
-            }
-          });
-          document.getElementById("guest-login").addEventListener("click", () => {
-  console.log("🚶 Invitado");
-  localStorage.setItem("guest", "true");
-  localStorage.setItem(
-    "user",
-    JSON.stringify({
-      username: "Invitado",
-      email: "invitado@restaurante.com"
-    })
-  );
-  window.location.href = "restaurante.html";
-});
 
-      
-          // — Registro nuevo usuario
-          document.getElementById("registerSubmit").addEventListener("click", async () => {
-            console.log("📝 Registro pulsado");
-            try {
-              const username = document.getElementById("reg-username").value.trim();
-              const email = document.getElementById("reg-email").value.trim();
-              const pass = document.getElementById("reg-password").value;
-              const pass2 = document.getElementById("reg-password-confirm").value;
-      
-              if (!username || !email || !pass) {
-                return alert("❗ Rellena todos los campos.");
-              }
-              if (pass !== pass2) {
-                return alert("❗ Las contraseñas no coinciden.");
-              }
-      
-              // Hash de la contraseña (solo demo en cliente)
-              const hash = bcrypt.hashSync(pass, 10);
-      
-              console.log("🔗 Insertando en usuarios…", { username, email });
-              const { data, error } = await supabaseClient
-                .from("usuarios")
-                .insert([{ username, email, password_hash: hash, role: "cliente" }]);
-      
-              if (error) throw error;
-              console.log("✅ Registro OK", data);
-      
-              // Auto-login y redirigir
-              localStorage.setItem("user", JSON.stringify({ username, email }));
-              window.location.href = "restaurante.html";
-      
-            } catch (err) {
-              console.error("❌ Error en registro:", err);
-              alert("No se pudo registrar: " + err.message);
-            }
+    <!-- Tu script de login/registro + recuperar contraseña -->
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        // fallback original para bcryptjs
+        const bcrypt = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt);
+        if (!bcrypt) {
+          console.error("❌ bcryptjs no disponible");
+          alert("Error interno: bcryptjs no disponible");
+          return;
+        }
+        console.log("📄 DOM cargado, inicializando auth");
+
+        // Supabase
+        const { createClient } = window.supabase;
+        const supabaseClient = createClient(
+          "https://slopghtwuyodfycfwngv.supabase.co",
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsb3BnaHR3dXlvZGZ5Y2Z3bmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODE3NDYsImV4cCI6MjA1OTM1Nzc0Nn0.fvKYIoFQt46We1-27DlFxYqvp3Kkdi7KFK76JwXUTCg" // tu anon key completa
+        );
+
+        // OAuth + Invitado
+        document.getElementById("login-google").onclick = async () =>
+          supabaseClient.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo: `${window.location.origin}/restaurante.html` },
           });
-      
-          // — Login con cuenta propia
-          document.getElementById("loginLocalSubmit").addEventListener("click", async () => {
-            console.log("🔐 Login local pulsado");
-            try {
-              const email = document.getElementById("login-email").value.trim();
-              const pass = document.getElementById("login-password").value;
-              if (!email || !pass) return alert("❗ Rellena todos los campos.");
-      
-              const { data: user, error } = await supabaseClient
-                .from("usuarios")
-                .select("*")
-                .eq("email", email)
-                .single();
-              if (error || !user) {
-                console.error("🕵️ Usuario no hallado:", error);
-                return alert("Usuario no encontrado.");
-              }
-      
-              if (!bcrypt.compareSync(pass, user.password_hash)) {
-                return alert("❗ Contraseña incorrecta.");
-              }
-      
-              console.log("✅ Login local OK", user);
-              localStorage.setItem(
-                "user",
-                JSON.stringify({ username: user.username, email: user.email })
-              );
-              window.location.href = "restaurante.html";
-            } catch (err) {
-              console.error("❌ Error en login local:", err);
-              alert("Error al iniciar sesión: " + err.message);
-            }
+        document.getElementById("login-facebook").onclick = async () =>
+          supabaseClient.auth.signInWithOAuth({
+            provider: "facebook",
+            options: { redirectTo: `${window.location.origin}/restaurante.html` },
           });
-        });
-      </script>
-      
+        document.getElementById("guest-login").onclick = () => {
+          localStorage.setItem("guest", "true");
+          localStorage.setItem(
+            "user",
+            JSON.stringify({ username: "Invitado", email: "invitado@restaurante.com" })
+          );
+          window.location.href = "restaurante.html";
+        };
+
+        // Registro
+        document.getElementById("registerSubmit").onclick = async () => {
+          const username = document.getElementById("reg-username").value.trim(),
+            email = document.getElementById("reg-email").value.trim(),
+            pass = document.getElementById("reg-password").value,
+            pass2 = document.getElementById("reg-password-confirm").value;
+          if (!username || !email || !pass) return alert("❗ Rellena todos los campos.");
+          if (pass !== pass2) return alert("❗ Las contraseñas no coinciden.");
+          const hash = bcrypt.hashSync(pass, 10);
+          const { error } = await supabaseClient.from("usuarios").insert([
+            { username, email, password_hash: hash, role: "cliente" },
+          ]);
+          if (error) return alert("❌ Error al registrar: " + error.message);
+          localStorage.setItem("user", JSON.stringify({ username, email }));
+          window.location.href = "restaurante.html";
+        };
+
+        // Login
+        document.getElementById("loginLocalSubmit").onclick = async () => {
+          const email = document.getElementById("login-email").value.trim(),
+            pass = document.getElementById("login-password").value;
+          if (!email || !pass) return alert("❗ Rellena todos los campos.");
+          const { data: user, error } = await supabaseClient
+            .from("usuarios")
+            .select("*")
+            .eq("email", email)
+            .single();
+          if (error || !user) return alert("Usuario no encontrado.");
+          if (!bcrypt.compareSync(pass, user.password_hash))
+            return alert("❗ Contraseña incorrecta.");
+          localStorage.setItem(
+            "user",
+            JSON.stringify({ username: user.username, email: user.email })
+          );
+          window.location.href = "restaurante.html";
+        };
+
+        // Recuperar contraseña
+        let recupEmail = "",
+          recupCode = "";
+        document.getElementById("forgot-password").onclick = () =>
+          new bootstrap.Modal(document.getElementById("recuperarModal")).show();
+          
+          document.getElementById("sendCodeBtn").onclick = async () => {
+  recupEmail = document.getElementById("recup-email").value.trim();
+  if (!recupEmail) return alert("❗ Introduce tu email.");
+  recupCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+  // Rellenar el formulario oculto
+  document.getElementById("hidden-email").value = recupEmail;
+  document.getElementById("hidden-code").value = recupCode;
+
+  try {
+    await emailjs.sendForm("service_taezbe9", "template_p3r9gz4", "#hidden-recovery-form");
+  } catch (err) {
+    return alert("❌ No se pudo enviar el correo: " + JSON.stringify(err));
+  }
+  
+
+  // 💾 Guarda en localStorage
+  localStorage.setItem("recupEmail", recupEmail);
+
+  bootstrap.Modal.getInstance(document.getElementById("recuperarModal")).hide();
+  document.getElementById("codigoInstructions").textContent = `Hemos enviado un código a ${recupEmail}`;
+  new bootstrap.Modal(document.getElementById("codigoModal")).show();
+};
+
+        document.getElementById("verifyCodeBtn").onclick = () => {
+          if (document.getElementById("input-code").value.trim() !== recupCode)
+            return alert("❗ Código incorrecto.");
+          bootstrap.Modal.getInstance(document.getElementById("codigoModal")).hide();
+          new bootstrap.Modal(document.getElementById("cambiarModal")).show();
+        };
+        document.getElementById("changePasswordBtn").onclick = async () => {
+          const p1 = document.getElementById("new-password").value,
+            p2 = document.getElementById("confirm-password").value;
+          if (!p1 || p1 !== p2) return alert("❗ Las contraseñas no coinciden.");
+          const newHash = bcrypt.hashSync(p1, 10);
+          const targetEmail = localStorage.getItem("recupEmail");
+if (!targetEmail) return alert("❌ No se pudo encontrar el email.");
+
+const { error } = await supabaseClient
+  .from("usuarios")
+  .update({ password_hash: newHash })
+  .eq("email", targetEmail);
+
+          if (error) return alert("❌ No se pudo cambiar la contraseña.");
+          alert("✅ Contraseña actualizada.");
+          localStorage.removeItem("recupEmail");
+
+          bootstrap.Modal.getInstance(document.getElementById("cambiarModal")).hide();
+        };
+      });
+    </script>
+<!-- Formulario oculto para enviar el email con EmailJS -->
+<form id="hidden-recovery-form" style="display: none;">
+  <input type="text" name="to_email" id="hidden-email" />
+  <input type="text" name="recovery_code" id="hidden-code" />
+</form>
+
   </body>
 </html>
