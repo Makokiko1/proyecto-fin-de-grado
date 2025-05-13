@@ -29,6 +29,21 @@ let ingredientesPersonalizados = [];
 // Inicializar al cargar el DOM
 // ========================
 document.addEventListener("DOMContentLoaded", async () => {
+  // ———————————————————————————————————————————
+  // 0) GESTIÓN DE GOOGLE OAUTH: busca/crea usuario
+  // ———————————————————————————————————————————
+  // 0.1) Atiende a cambios de auth (redir de OAuth o login manual)
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
+    if (event === "SIGNED_IN") {
+      await handleGoogleUser(session);
+    }
+  });
+
+  // 0.2) Si ya hay sesión activa al cargar la página, también la procesamos
+  const { data: { session }, error: getErr } = await supabaseClient.auth.getSession();
+  if (!getErr && session) {
+    await handleGoogleUser(session);
+  }
   await fetchCategories();
   await fetchMenuItems();
   displayMenuItems("all");
@@ -51,6 +66,65 @@ if (userInfo && userInfo.username) {
     .getElementById("save-customization")
     .addEventListener("click", guardarPersonalizacion);
 });
+// ———————————————————————————————————————————
+// Función que busca/crea el usuario en tu tabla “usuarios”
+// ———————————————————————————————————————————
+async function handleGoogleUser(session) {
+  const user = session.user;
+  // solo nos interesa Google OAuth
+  const isGoogle = user.identities?.some(i => i.provider === "google");
+  if (!isGoogle) return;
+
+  // comprueba email verificado
+  if (!user.email_confirmed_at) {
+    alert("Confirma tu email de Google antes de continuar.");
+    return;
+  }
+
+  const email = user.email;
+  const defaultName = user.user_metadata.name || email.split("@")[0];
+
+  // 1) busca en la tabla
+  const { data: existing, error: selErr } = await supabaseClient
+    .from("usuarios")
+    .select("id, username, email")
+    .eq("email", email);
+
+  if (selErr && selErr.code !== "PGRST116") {
+    console.error("Error comprobando usuario:", selErr);
+    return;
+  }
+
+  let perfil;
+  if (!existing || existing.length === 0) {
+    // 2) si no existe, lo creamos **definitivamente**
+    const { data: inserted, error: insErr } = await supabaseClient
+      .from("usuarios")
+      .insert([{
+        username: defaultName,
+        email,
+        role: "cliente",
+        oauth_provider: "google",
+        oauth_id: user.id
+      }])
+      .select("id, username, email")
+      .single();
+
+    if (insErr) {
+      console.error("Error creando usuario OAuth:", insErr);
+      return;
+    }
+    perfil = inserted;
+  } else {
+    perfil = existing[0];
+  }
+
+  // 3) guarda en localStorage para el resto de la app
+  localStorage.setItem("user", JSON.stringify({
+    username: perfil.username,
+    email: perfil.email
+  }));
+}
 
 // ========================
 //  Obtener y mostrar categorías
