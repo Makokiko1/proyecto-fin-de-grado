@@ -371,38 +371,17 @@
 // const mesaParam = urlParams.get("table");
 // if (mesaParam) localStorage.setItem("mesaId", mesaParam);
 
-btnGoogle.addEventListener("click", async e => {
+document.getElementById("login-google").addEventListener("click", async e => {
   e.preventDefault();
-
-  // 1) Primero lee la mesa de la URL si viene (OAuth suele conservarla)
-  const urlMesa = new URLSearchParams(window.location.search).get("table");
-
-  // 2) Si no estaba en la URL, toma la que guardaste en localStorage
-  const mesaId = urlMesa || localStorage.getItem("mesaId");
-
-  // 3) Construye la URL de redirección (con ?table=… siempre que exista)
+  const mesaId = localStorage.getItem("mesaId");
   const redirectUrl =
     `${window.location.origin}/restaurante.html` +
     (mesaId ? `?table=${mesaId}` : "");
-
-  // 4) Llama a Supabase pasándole esa URL
-// Lanza el OAuth y captura la URL que devuelve Supabase
-const { data, error } = await supabaseClient.auth.signInWithOAuth({
-  provider: "google",
-  options: { redirectTo: redirectUrl },
+  await supabaseClient.auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: redirectUrl },
+  });
 });
-
-if (error) {
-  console.error("Error al iniciar con Google:", error);
-  alert("No se pudo iniciar sesión con Google:\n" + error.message);
-  return;
-}
-
-// Forzamos la redirección a la URL que nos proporciona Supabase
-window.location.href = data.url;
-
-});
-
 
         document.getElementById("login-facebook").onclick = async () =>
           supabaseClient.auth.signInWithOAuth({
