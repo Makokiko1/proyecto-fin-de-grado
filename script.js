@@ -661,33 +661,17 @@ const aplicaDescuento = (numeroPedido % 10 === 0) && !esInvitado;
       totalFinal     = totalOriginal - descuentoValor;
     }
 
-
-  // ———————— RELEER mesa_id just antes del INSERT ————————
-  const mesaParamUrl = new URLSearchParams(window.location.search).get("table");
-  // si no viene en la URL, cae en la variable superior (de localStorage o URL inicial)
-  const mesaToUse     = mesaParamUrl
-    ? parseInt(mesaParamUrl, 10)
-    : mesaId;
-
-  // 4) Insertar en pedidos, usando mesaToUse
-  const { data, error: insertErr } = await supabaseClient
+  // 4) Insertar en pedidos, ahora incluyendo mesa_id
+  const { error: insertErr } = await supabaseClient
     .from("pedidos")
-    .insert([{
+    .insert({
       usuario_id:       usuario.id,
-      mesa_id:          mesaToUse,
+      mesa_id:          mesaId,               // ← dos puntos y variable mesaId
       total:            totalFinal.toFixed(2),
       aplica_descuento: aplicaDescuento,
-      descuento_aplicado: descuentoValor.toFixed(2),
+      descuento_aplicado:  descuentoValor.toFixed(2),
       items:            cartItems
-    }])
-    .select();
-
-  if (insertErr) {
-    console.error("Error al guardar el pedido:", insertErr);
-    return alert("Error al guardar el pedido. Comprueba la consola.");
-  }
-
-  console.log("✅ Pedido insertado:", data);
+    });
 
 
   if (insertErr) {
