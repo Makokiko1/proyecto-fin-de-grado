@@ -371,17 +371,22 @@
 // const mesaParam = urlParams.get("table");
 // if (mesaParam) localStorage.setItem("mesaId", mesaParam);
 
+// NUEVO: Google OAuth inyectando la mesa en la URL
 document.getElementById("login-google").addEventListener("click", async e => {
   e.preventDefault();
+  // Leer mesaId de localStorage
   const mesaId = localStorage.getItem("mesaId");
+  // Construir URL de retorno
   const redirectUrl =
     `${window.location.origin}/restaurante.html` +
     (mesaId ? `?table=${mesaId}` : "");
+  // Lanzar OAuth con la URL que incluye el ?table=
   await supabaseClient.auth.signInWithOAuth({
     provider: "google",
     options: { redirectTo: redirectUrl },
   });
 });
+
 
         document.getElementById("login-facebook").onclick = async () =>
           supabaseClient.auth.signInWithOAuth({
