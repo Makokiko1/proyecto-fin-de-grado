@@ -342,6 +342,12 @@
     <!-- Tu script de login/registro + recuperar contraseña -->
     <script>
       document.addEventListener("DOMContentLoaded", () => {
+  // 1) Leer param table de la URL y guardar en localStorage
+  const urlParams = new URLSearchParams(window.location.search);
+  const mesaParam = urlParams.get("table");
+  if (mesaParam) {
+    localStorage.setItem("mesaId", mesaParam);
+  }
         // fallback original para bcryptjs
         const bcrypt = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt);
         if (!bcrypt) {
@@ -359,24 +365,29 @@
         );
 
         // OAuth + Invitado
-        document.getElementById("login-google").onclick = async () =>
-          supabaseClient.auth.signInWithOAuth({
-            provider: "google",
-            options: { redirectTo: `${window.location.origin}/restaurante.html` },
-          });
+       // Luego, al configurar el login con Google:
+document.getElementById("login-google").onclick = async () => {
+  const redirectUrl = `${window.location.origin}/restaurante.html` +
+                      (mesaId ? `?table=${mesaId}` : "");
+
+  await supabaseClient.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: redirectUrl
+    },
+  });
+};
         document.getElementById("login-facebook").onclick = async () =>
           supabaseClient.auth.signInWithOAuth({
             provider: "facebook",
             options: { redirectTo: `${window.location.origin}/restaurante.html` },
           });
-        document.getElementById("guest-login").onclick = () => {
-          localStorage.setItem("guest", "true");
-          localStorage.setItem(
-            "user",
-            JSON.stringify({ username: "Invitado", email: "invitado@restaurante.com" })
-          );
-          window.location.href = "restaurante.html";
-        };
+      document.getElementById("guest-login").onclick = () => {
+  // ya tienes mesaId en localStorage
+  const mesaParam = localStorage.getItem("mesaId");
+  window.location.href = `restaurante.html${mesaParam ? `?table=${mesaParam}` : ""}`;
+};
+
 
         // Registro
         document.getElementById("registerSubmit").onclick = async () => {
@@ -392,7 +403,9 @@
           ]);
           if (error) return alert("❌ Error al registrar: " + error.message);
           localStorage.setItem("user", JSON.stringify({ username, email }));
-          window.location.href = "restaurante.html";
+          const mesaParam = localStorage.getItem("mesaId");
+window.location.href = `restaurante.html${mesaParam ? `?table=${mesaParam}` : ""}`;
+
         };
 
         // Login
@@ -412,7 +425,9 @@
             "user",
             JSON.stringify({ username: user.username, email: user.email })
           );
-          window.location.href = "restaurante.html";
+          const mesaParam = localStorage.getItem("mesaId");
+window.location.href = `restaurante.html${mesaParam ? `?table=${mesaParam}` : ""}`;
+
         };
 
         // Recuperar contraseña

@@ -7,6 +7,10 @@
 // ========================
 // Configuración de Supabase
 // ========================
+// Al tope de script.js
+const urlParams    = new URLSearchParams(window.location.search);
+const mesaIdParam  = urlParams.get("table") || localStorage.getItem("mesaId");
+const mesaId       = mesaIdParam ? parseInt(mesaIdParam, 10) : null;
 
 const supabaseUrl = "https://slopghtwuyodfycfwngv.supabase.co";
 const supabaseAnonKey =
@@ -657,20 +661,23 @@ const aplicaDescuento = (numeroPedido % 10 === 0) && !esInvitado;
       totalFinal     = totalOriginal - descuentoValor;
     }
 
-    // 4) Insertar en pedidos
-    const { error: insertErr } = await supabaseClient
-      .from("pedidos")
-      .insert({
-        usuario_id: usuario.id,
-        total: totalFinal.toFixed(2),
-        aplica_descuento: aplicaDescuento,
-        descuento_aplicado: descuentoValor.toFixed(2),
-        items: cartItems
-      });
-    if (insertErr) {
-      console.error(insertErr);
-      return alert("Error al guardar el pedido.");
-    }
+ // 4) Insertar en pedidos, ahora incluyendo mesa_id
+  const { error: insertErr } = await supabaseClient
+    .from("pedidos")
+    .insert({
+      usuario_id: usuario.id,
+      mesa_id,                    // ← aquí
+      total: totalFinal.toFixed(2),
+      aplica_descuento: aplicaDescuento,
+      descuento_aplicado: descuentoValor.toFixed(2),
+      items: cartItems
+    });
+
+  if (insertErr) {
+    console.error(insertErr);
+    return alert("Error al guardar el pedido.");
+  }
+
 
     // 5) Actualizar UI y mensaje
     const importeTexto = `$${totalFinal.toFixed(2)}`;

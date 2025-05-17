@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>QR Mesas</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .grid { display: flex; flex-wrap: wrap; gap: 20px; }
+    .mesa { text-align: center; }
+    .mesa img { display: block; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <h1>QR Mesas (JS puro)</h1>
+  <div id="qr-grid" class="grid"></div>
+
+  <script>
+    (function(){
+      const baseUrl = 'http://proyecto-fin-de-grado.vercel.app';
+      const container = document.getElementById('qr-grid');
+
+      for (let mesa = 1; mesa <= 5; mesa++) {
+        const block = document.createElement('div');
+        block.classList.add('mesa');
+
+        const title = document.createElement('h4');
+        title.textContent = `Mesa ${mesa}`;
+        block.appendChild(title);
+
+        const img = document.createElement('img');
+        const urlParam = `${baseUrl}?table=${mesa}`;
+        const qrSize  = 200; // píxeles
+
+        // ← Aquí cambiamos de chart.googleapis.com a quickchart.io
+        img.src = 
+          'https://quickchart.io/chart?' +
+          `cht=qr&chs=${qrSize}x${qrSize}` +
+          `&chl=${encodeURIComponent(urlParam)}`;
+        img.alt = `QR Mesa ${mesa}`;
+        block.appendChild(img);
+
+        container.appendChild(block);
+      }
+    })();
+  </script>
+</body>
+</html>
