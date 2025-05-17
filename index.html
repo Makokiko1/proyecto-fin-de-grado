@@ -386,10 +386,21 @@ btnGoogle.addEventListener("click", async e => {
     (mesaId ? `?table=${mesaId}` : "");
 
   // 4) Llama a Supabase pasándole esa URL
-  await supabaseClient.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: redirectUrl },
-  });
+// Lanza el OAuth y captura la URL que devuelve Supabase
+const { data, error } = await supabaseClient.auth.signInWithOAuth({
+  provider: "google",
+  options: { redirectTo: redirectUrl },
+});
+
+if (error) {
+  console.error("Error al iniciar con Google:", error);
+  alert("No se pudo iniciar sesión con Google:\n" + error.message);
+  return;
+}
+
+// Forzamos la redirección a la URL que nos proporciona Supabase
+window.location.href = data.url;
+
 });
 
 
