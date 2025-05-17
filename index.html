@@ -366,17 +366,23 @@
 
         // OAuth + Invitado
        // Luego, al configurar el login con Google:
-document.getElementById("login-google").onclick = async () => {
-  const redirectUrl = `${window.location.origin}/restaurante.html` +
-                      (mesaId ? `?table=${mesaId}` : "");
+// primero, asegúrate de tener ya leída la mesa:
+// const urlParams = new URLSearchParams(window.location.search);
+// const mesaParam = urlParams.get("table");
+// if (mesaParam) localStorage.setItem("mesaId", mesaParam);
 
+document.getElementById("login-google").addEventListener("click", async e => {
+  e.preventDefault();
+  const mesaId = localStorage.getItem("mesaId");
+  const redirectUrl =
+    `${window.location.origin}/restaurante.html` +
+    (mesaId ? `?table=${mesaId}` : "");
   await supabaseClient.auth.signInWithOAuth({
     provider: "google",
-    options: {
-      redirectTo: redirectUrl
-    },
+    options: { redirectTo: redirectUrl },
   });
-};
+});
+
         document.getElementById("login-facebook").onclick = async () =>
           supabaseClient.auth.signInWithOAuth({
             provider: "facebook",
