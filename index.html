@@ -371,17 +371,12 @@
 // const mesaParam = urlParams.get("table");
 // if (mesaParam) localStorage.setItem("mesaId", mesaParam);
 
-document.getElementById("login-google").addEventListener("click", async e => {
-  e.preventDefault();
-  const mesaId = localStorage.getItem("mesaId");
-  const redirectUrl =
-    `${window.location.origin}/restaurante.html` +
-    (mesaId ? `?table=${mesaId}` : "");
-  await supabaseClient.auth.signInWithOAuth({
-    provider: "google",
-    options: { redirectTo: redirectUrl },
-  });
-});
+ // OAuth + Invitado
+        document.getElementById("login-google").onclick = async () =>
+          supabaseClient.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo: `${window.location.origin}/restaurante.html` },
+          });
 
         document.getElementById("login-facebook").onclick = async () =>
           supabaseClient.auth.signInWithOAuth({
