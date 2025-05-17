@@ -661,17 +661,18 @@ const aplicaDescuento = (numeroPedido % 10 === 0) && !esInvitado;
       totalFinal     = totalOriginal - descuentoValor;
     }
 
- // 4) Insertar en pedidos, ahora incluyendo mesa_id
+  // 4) Insertar en pedidos, ahora incluyendo mesa_id
   const { error: insertErr } = await supabaseClient
     .from("pedidos")
     .insert({
-      usuario_id: usuario.id,
-      mesa_id: mesaId,                   // ← aquí
-      total: totalFinal.toFixed(2),
+      usuario_id:       usuario.id,
+      mesa_id:          mesaId,               // ← dos puntos y variable mesaId
+      total:            totalFinal.toFixed(2),
       aplica_descuento: aplicaDescuento,
-      descuento_aplicado: descuentoValor.toFixed(2),
-      items: cartItems
+      descuento_aplicado:  descuentoValor.toFixed(2),
+      items:            cartItems
     });
+
 
   if (insertErr) {
     console.error(insertErr);
