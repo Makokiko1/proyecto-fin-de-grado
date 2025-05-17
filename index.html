@@ -388,11 +388,18 @@ document.getElementById("login-google").addEventListener("click", async e => {
             provider: "facebook",
             options: { redirectTo: `${window.location.origin}/restaurante.html` },
           });
-      document.getElementById("guest-login").onclick = () => {
-  // ya tienes mesaId en localStorage
+   document.getElementById("guest-login").addEventListener("click", () => {
+  // 2.1) Definir el usuario Invitado para que tu lógica de descuentos lo detecte
+  localStorage.setItem(
+    "user",
+    JSON.stringify({ username: "Invitado", email: "invitado@restaurante.com" })
+  );
+
+  // 2.2) Redirigir a restaurante.html?table=…
   const mesaParam = localStorage.getItem("mesaId");
-  window.location.href = `restaurante.html${mesaParam ? `?table=${mesaParam}` : ""}`;
-};
+  window.location.href = `/restaurante.html${mesaParam ? `?table=${mesaParam}` : ""}`;
+});
+
 
 
         // Registro
