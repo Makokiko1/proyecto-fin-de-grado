@@ -666,7 +666,7 @@ const aplicaDescuento = (numeroPedido % 10 === 0) && !esInvitado;
     .from("pedidos")
     .insert({
       usuario_id: usuario.id,
-      mesa_id,                    // ← aquí
+      mesa_id: mesaId,                   // ← aquí
       total: totalFinal.toFixed(2),
       aplica_descuento: aplicaDescuento,
       descuento_aplicado: descuentoValor.toFixed(2),
