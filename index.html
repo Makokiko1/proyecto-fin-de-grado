@@ -340,46 +340,65 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Tu script de login/registro + recuperar contraseña -->
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  // 1) Captura ?table=XX y guárdalo
-  const params = new URLSearchParams(window.location.search);
-  const mesa   = params.get("table");
-  if (mesa) {
-    localStorage.setItem("mesaId", mesa);
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+  
+        // fallback original para bcryptjs
+        const bcrypt = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt);
+        if (!bcrypt) {
+          console.error("❌ bcryptjs no disponible");
+          alert("Error interno: bcryptjs no disponible");
+          return;
+        }
+        console.log("📄 DOM cargado, inicializando auth");
+
+        // Supabase
+        const { createClient } = window.supabase;
+        const supabaseClient = createClient(
+          "https://slopghtwuyodfycfwngv.supabase.co",
+          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsb3BnaHR3dXlvZGZ5Y2Z3bmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODE3NDYsImV4cCI6MjA1OTM1Nzc0Nn0.fvKYIoFQt46We1-27DlFxYqvp3Kkdi7KFK76JwXUTCg" // tu anon key completa
+        );
+
+        // OAuth + Invitado
+       // Luego, al configurar el login con Google:
+// primero, asegúrate de tener ya leída la mesa:
+// const urlParams = new URLSearchParams(window.location.search);
+// const mesaParam = urlParams.get("table");
+// if (mesaParam) localStorage.setItem("mesaId", mesaParam);
+
+// ────────────────────────────────────────────
+// 1) Capturar mesaId al cargar y guardarlo
+// ────────────────────────────────────────────
+const initialParams = new URLSearchParams(window.location.search);
+const initialMesa   = initialParams.get("table");
+if (initialMesa) {
+  localStorage.setItem("mesaId", initialMesa);
+}
+
+// ────────────────────────────────────────────
+// 2) Listener que detecta el SIGNED_IN de OAuth
+// ────────────────────────────────────────────
+supabaseClient.auth.onAuthStateChange(async (event, session) => {
+  if (event === "SIGNED_IN") {
+    // 2.1) Crea/lee el perfil en tu tabla usuarios
+    await handleGoogleUser(session);
+
+    // 2.2) Redirige TÚ mismo a restaurante.html con mesaId
+    const mesaGuardada = localStorage.getItem("mesaId");
+    window.location.href = `/restaurante.html${mesaGuardada ? "?table=" + mesaGuardada : ""}`;
   }
+});
 
-  // 2) Inicializa Supabase y bcrypt
-  const bcrypt = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt);
-  if (!bcrypt) {
-    console.error("❌ bcryptjs no disponible");
-    return alert("Error interno: bcryptjs no disponible");
-  }
-  const { createClient } = window.supabase;
-  const supabaseClient = createClient(
-    "https://slopghtwuyodfycfwngv.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNsb3BnaHR3dXlvZGZ5Y2Z3bmd2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3ODE3NDYsImV4cCI6MjA1OTM1Nzc0Nn0.fvKYIoFQt46We1-27DlFxYqvp3Kkdi7KFK76JwXUTCg"
-  );
+// ────────────────────────────────────────────
+// 3) Botones OAuth SIN redirectTo
+// ────────────────────────────────────────────
+document.getElementById("login-google").onclick = () =>
+  supabaseClient.auth.signInWithOAuth({ provider: "google" });
 
-  // 3) Listener de auth: cuando se confirme el login OAuth
-  supabaseClient.auth.onAuthStateChange(async (event, session) => {
-    if (event === "SIGNED_IN") {
-      // 3.1) Crea o recupera el perfil en tu tabla “usuarios”
-      await handleGoogleUser(session);
+document.getElementById("login-facebook").onclick = () =>
+  supabaseClient.auth.signInWithOAuth({ provider: "facebook" });
 
-      // 3.2) Redirige TÚ a restaurante.html con el table guardado
-      const mesaGuardada = localStorage.getItem("mesaId");
-      window.location.href = `/restaurante.html${mesaGuardada ? "?table=" + mesaGuardada : ""}`;
-    }
-  });
 
-  // 4) Botones OAuth SIN redirectTo
-  document.getElementById("login-google").onclick = () => {
-    supabaseClient.auth.signInWithOAuth({ provider: "google" });
-  };
-  document.getElementById("login-facebook").onclick = () => {
-    supabaseClient.auth.signInWithOAuth({ provider: "facebook" });
-  };
 
    document.getElementById("guest-login").addEventListener("click", () => {
   // 2.1) Definir el usuario Invitado para que tu lógica de descuentos lo detecte
