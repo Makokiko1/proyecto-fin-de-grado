@@ -380,33 +380,20 @@ if (initialMesa) {
 // ────────────────────────────────────────────
 supabaseClient.auth.onAuthStateChange(async (event, session) => {
   if (event === "SIGNED_IN") {
+    // 2.1) Crea/lee el perfil en tu tabla usuarios
     await handleGoogleUser(session);
-    
-    // Obtener mesa de localStorage o de la URL actual
-    const mesaParam = new URLSearchParams(window.location.search).get("table") || 
-                     localStorage.getItem("mesaId");
-    
-    if (mesaParam) {
-      localStorage.setItem("mesaId", mesaParam);
-    }
-    
-    // Redirigir conservando la mesa
-    window.location.href = `/restaurante.html${mesaParam ? `?table=${mesaParam}` : ""}`;
+
+    // 2.2) Redirige TÚ mismo a restaurante.html con mesaId
+    const mesaGuardada = localStorage.getItem("mesaId");
+    window.location.href = `/restaurante.html${mesaGuardada ? "?table=" + mesaGuardada : ""}`;
   }
 });
 
 // ────────────────────────────────────────────
 // 3) Botones OAuth SIN redirectTo
 // ────────────────────────────────────────────
-document.getElementById("login-google").onclick = () => {
-  const mesaGuardada = localStorage.getItem("mesaId");
-  supabaseClient.auth.signInWithOAuth({
-    provider: "google",
-    options: {
-      redirectTo: `${window.location.origin}/restaurante.html${mesaGuardada ? `?table=${mesaGuardada}` : ""}`
-    }
-  });
-};
+document.getElementById("login-google").onclick = () =>
+  supabaseClient.auth.signInWithOAuth({ provider: "google" });
 
 document.getElementById("login-facebook").onclick = () =>
   supabaseClient.auth.signInWithOAuth({ provider: "facebook" });
