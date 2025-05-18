@@ -342,12 +342,7 @@
     <!-- Tu script de login/registro + recuperar contraseña -->
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-  // 1) Leer param table de la URL y guardar en localStorage
-  const urlParams = new URLSearchParams(window.location.search);
-  const mesaParam = urlParams.get("table");
-  if (mesaParam) {
-    localStorage.setItem("mesaId", mesaParam);
-  }
+  
         // fallback original para bcryptjs
         const bcrypt = window.bcrypt || (window.dcodeIO && window.dcodeIO.bcrypt);
         if (!bcrypt) {
@@ -373,13 +368,23 @@
 
 // Función que asegura mesaId antes de lanzar el flujo OAuth
 async function oauthLogin(provider) {
+  // 1) Capturar de la URL si vienen con ?table=XX
+  const params    = new URLSearchParams(window.location.search);
+  const mesaParam = params.get("table");
+  if (mesaParam) {
+    localStorage.setItem("mesaId", mesaParam);
+  }
+
+  // 2) Leer ya guardado en localStorage
   const mesa = localStorage.getItem("mesaId");
   if (!mesa) {
     return alert(
       "No se ha detectado el número de mesa. " +
-      "Asegúrate de entrar con ?table=XX en la URL antes de iniciar sesión."
+      "Debes entrar antes con ?table=XX en la URL."
     );
   }
+
+  // 3) Lanzar OAuth apuntando a restaurante.html
   await supabaseClient.auth.signInWithOAuth({
     provider,
     options: {
@@ -388,9 +393,10 @@ async function oauthLogin(provider) {
   });
 }
 
-// Conecta los botones al nuevo flujo
+// y las dos líneas de los botones quedan así:
 document.getElementById("login-google").onclick   = () => oauthLogin("google");
 document.getElementById("login-facebook").onclick = () => oauthLogin("facebook");
+
 
    document.getElementById("guest-login").addEventListener("click", () => {
   // 2.1) Definir el usuario Invitado para que tu lógica de descuentos lo detecte
