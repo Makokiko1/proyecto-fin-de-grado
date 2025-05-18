@@ -392,11 +392,26 @@ supabaseClient.auth.onAuthStateChange(async (event, session) => {
 // ────────────────────────────────────────────
 // 3) Botones OAuth SIN redirectTo
 // ────────────────────────────────────────────
-document.getElementById("login-google").onclick = () =>
-  supabaseClient.auth.signInWithOAuth({ provider: "google" });
+// Nuevo: Añade aquí el redirectTo con el ?table=…
+document.getElementById("login-google").onclick = () => {
+  const mesa = localStorage.getItem("mesaId");
+  supabaseClient.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${window.location.origin}/restaurante.html?table=${mesa}`
+    }
+  });
+};
 
-document.getElementById("login-facebook").onclick = () =>
-  supabaseClient.auth.signInWithOAuth({ provider: "facebook" });
+document.getElementById("login-facebook").onclick = () => {
+  const mesa = localStorage.getItem("mesaId");
+  supabaseClient.auth.signInWithOAuth({
+    provider: "facebook",
+    options: {
+      redirectTo: `${window.location.origin}/restaurante.html?table=${mesa}`
+    }
+  });
+};
 
 
 
