@@ -378,24 +378,15 @@ if (initialMesa) {
 // ────────────────────────────────────────────
 // 2) Listener que detecta el SIGNED_IN de OAuth
 // ────────────────────────────────────────────
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  if (event === "SIGNED_IN") {
-    // 2.1) Crea/lee el perfil en tu tabla usuarios
-    await handleGoogleUser(session);
 
-    // 2.2) Redirige TÚ mismo a restaurante.html con mesaId
-    const mesaGuardada = localStorage.getItem("mesaId");
-    window.location.href = `/restaurante.html${mesaGuardada ? "?table=" + mesaGuardada : ""}`;
-  }
-});
 
 // ────────────────────────────────────────────
 // 3) Botones OAuth SIN redirectTo
 // ────────────────────────────────────────────
-// Nuevo: Añade aquí el redirectTo con el ?table=…
-document.getElementById("login-google").onclick = () => {
+// AHORA (con redirectTo)
+document.getElementById("login-google").onclick = async () => {
   const mesa = localStorage.getItem("mesaId");
-  supabaseClient.auth.signInWithOAuth({
+  await supabaseClient.auth.signInWithOAuth({
     provider: "google",
     options: {
       redirectTo: `${window.location.origin}/restaurante.html?table=${mesa}`
@@ -403,9 +394,9 @@ document.getElementById("login-google").onclick = () => {
   });
 };
 
-document.getElementById("login-facebook").onclick = () => {
+document.getElementById("login-facebook").onclick = async () => {
   const mesa = localStorage.getItem("mesaId");
-  supabaseClient.auth.signInWithOAuth({
+  await supabaseClient.auth.signInWithOAuth({
     provider: "facebook",
     options: {
       redirectTo: `${window.location.origin}/restaurante.html?table=${mesa}`
