@@ -373,25 +373,17 @@
 // if (mesaParam) localStorage.setItem("mesaId", mesaParam);
 
  // OAuth + Invitado
-   // Función genérica que primero verifica mesaId y luego lanza OAuth
-async function oauthLogin(provider) {
-  const mesa = localStorage.getItem("mesaId");
-  if (!mesa) {
-    return alert("No se ha detectado el número de mesa. Vuelve atrás e inténtalo de nuevo.");
-  }
-  // Lanza el flujo OAuth sin params en la URL
-  await supabaseClient.auth.signInWithOAuth({
-    provider,
-    options: {
-      redirectTo: `${window.location.origin}/restaurante.html`
-    }
-  });
-}
+        document.getElementById("login-google").onclick = async () =>
+          supabaseClient.auth.signInWithOAuth({
+            provider: "google",
+            options: { redirectTo: `${window.location.origin}/restaurante.html` },
+          });
 
-// Conecta los botones a la nueva función
-document.getElementById("login-google").onclick   = () => oauthLogin("google");
-document.getElementById("login-facebook").onclick = () => oauthLogin("facebook");
-
+        document.getElementById("login-facebook").onclick = async () =>
+          supabaseClient.auth.signInWithOAuth({
+            provider: "facebook",
+            options: { redirectTo: `${window.location.origin}/restaurante.html` },
+          });
    document.getElementById("guest-login").addEventListener("click", () => {
   // 2.1) Definir el usuario Invitado para que tu lógica de descuentos lo detecte
   localStorage.setItem(
