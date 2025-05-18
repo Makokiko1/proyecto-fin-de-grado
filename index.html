@@ -378,31 +378,38 @@ if (initialMesa) {
 // ────────────────────────────────────────────
 // 2) Listener que detecta el SIGNED_IN de OAuth
 // ────────────────────────────────────────────
-
+supabaseClient.auth.onAuthStateChange(async (event, session) => {
+  if (event === "SIGNED_IN") {
+    await handleGoogleUser(session);
+    
+    // Obtener mesa de localStorage o de la URL actual
+    const mesaParam = new URLSearchParams(window.location.search).get("table") || 
+                     localStorage.getItem("mesaId");
+    
+    if (mesaParam) {
+      localStorage.setItem("mesaId", mesaParam);
+    }
+    
+    // Redirigir conservando la mesa
+    window.location.href = `/restaurante.html${mesaParam ? `?table=${mesaParam}` : ""}`;
+  }
+});
 
 // ────────────────────────────────────────────
 // 3) Botones OAuth SIN redirectTo
 // ────────────────────────────────────────────
-// AHORA (con redirectTo)
-document.getElementById("login-google").onclick = async () => {
-  const mesa = localStorage.getItem("mesaId");
-  await supabaseClient.auth.signInWithOAuth({
+document.getElementById("login-google").onclick = () => {
+  const mesaGuardada = localStorage.getItem("mesaId");
+  supabaseClient.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${window.location.origin}/restaurante.html?table=${mesa}`
+      redirectTo: `${window.location.origin}/restaurante.html${mesaGuardada ? `?table=${mesaGuardada}` : ""}`
     }
   });
 };
 
-document.getElementById("login-facebook").onclick = async () => {
-  const mesa = localStorage.getItem("mesaId");
-  await supabaseClient.auth.signInWithOAuth({
-    provider: "facebook",
-    options: {
-      redirectTo: `${window.location.origin}/restaurante.html?table=${mesa}`
-    }
-  });
-};
+document.getElementById("login-facebook").onclick = () =>
+  supabaseClient.auth.signInWithOAuth({ provider: "facebook" });
 
 
 
