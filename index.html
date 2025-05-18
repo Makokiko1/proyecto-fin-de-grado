@@ -371,18 +371,26 @@
 // const mesaParam = urlParams.get("table");
 // if (mesaParam) localStorage.setItem("mesaId", mesaParam);
 
- // OAuth + Invitado
-        document.getElementById("login-google").onclick = async () =>
-          supabaseClient.auth.signInWithOAuth({
-            provider: "google",
-            options: { redirectTo: `${window.location.origin}/restaurante.html` },
-          });
+ // Cámbialo por esto:
+async function oauthLogin(provider) {
+  // Lee la mesa de localStorage (la pusiste antes al leer el URL param)
+  const mesaId = localStorage.getItem("mesaId");
+  // Construye el URL de redirección
+  const redirectTo = mesaId
+    ? `${window.location.origin}/restaurante.html?table=${mesaId}`
+    : `${window.location.origin}/restaurante.html`;
 
-        document.getElementById("login-facebook").onclick = async () =>
-          supabaseClient.auth.signInWithOAuth({
-            provider: "facebook",
-            options: { redirectTo: `${window.location.origin}/restaurante.html` },
-          });
+  await supabaseClient.auth.signInWithOAuth({
+    provider,
+    options: { redirectTo },
+  });
+}
+
+// Y luego:
+document.getElementById("login-google").onclick = () =>
+  oauthLogin("google");
+document.getElementById("login-facebook").onclick = () =>
+  oauthLogin("facebook");
    document.getElementById("guest-login").addEventListener("click", () => {
   // 2.1) Definir el usuario Invitado para que tu lógica de descuentos lo detecte
   localStorage.setItem(
