@@ -341,6 +341,7 @@
 
     <!-- Tu script de login/registro + recuperar contraseña -->
     <script>
+      
       document.addEventListener("DOMContentLoaded", () => {
   // 1) Leer param table de la URL y guardar en localStorage
   const urlParams = new URLSearchParams(window.location.search);
@@ -371,26 +372,26 @@
 // const mesaParam = urlParams.get("table");
 // if (mesaParam) localStorage.setItem("mesaId", mesaParam);
 
- // Cámbialo por esto:
+ // OAuth + Invitado
+   // Función genérica que primero verifica mesaId y luego lanza OAuth
 async function oauthLogin(provider) {
-  // Lee la mesa de localStorage (la pusiste antes al leer el URL param)
-  const mesaId = localStorage.getItem("mesaId");
-  // Construye el URL de redirección
-  const redirectTo = mesaId
-    ? `${window.location.origin}/restaurante.html?table=${mesaId}`
-    : `${window.location.origin}/restaurante.html`;
-
+  const mesa = localStorage.getItem("mesaId");
+  if (!mesa) {
+    return alert("No se ha detectado el número de mesa. Vuelve atrás e inténtalo de nuevo.");
+  }
+  // Lanza el flujo OAuth sin params en la URL
   await supabaseClient.auth.signInWithOAuth({
     provider,
-    options: { redirectTo },
+    options: {
+      redirectTo: `${window.location.origin}/restaurante.html`
+    }
   });
 }
 
-// Y luego:
-document.getElementById("login-google").onclick = () =>
-  oauthLogin("google");
-document.getElementById("login-facebook").onclick = () =>
-  oauthLogin("facebook");
+// Conecta los botones a la nueva función
+document.getElementById("login-google").onclick   = () => oauthLogin("google");
+document.getElementById("login-facebook").onclick = () => oauthLogin("facebook");
+
    document.getElementById("guest-login").addEventListener("click", () => {
   // 2.1) Definir el usuario Invitado para que tu lógica de descuentos lo detecte
   localStorage.setItem(

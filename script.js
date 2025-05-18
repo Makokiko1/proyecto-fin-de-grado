@@ -9,6 +9,12 @@
 // ========================
 // Al tope de script.js
 const urlParams    = new URLSearchParams(window.location.search);
+const mesaParamUrl = urlParams.get("table");
+// si viene en la URL, resérvalo en localStorage
+if (mesaParamUrl) {
+  localStorage.setItem("mesaId", mesaParamUrl);
+}
+
 const mesaIdParam  = urlParams.get("table") || localStorage.getItem("mesaId");
 const mesaId       = mesaIdParam ? parseInt(mesaIdParam, 10) : null;
 
@@ -662,12 +668,9 @@ const aplicaDescuento = (numeroPedido % 10 === 0) && !esInvitado;
     }
 
 
-  // ———————— RELEER mesa_id just antes del INSERT ————————
-  const mesaParamUrl = new URLSearchParams(window.location.search).get("table");
-  // si no viene en la URL, cae en la variable superior (de localStorage o URL inicial)
-  const mesaToUse     = mesaParamUrl
-    ? parseInt(mesaParamUrl, 10)
-    : mesaId;
+// ya tienes mesaId arriba (URL o localStorage), úsalo directamente
+const mesaToUse = mesaId;
+
 
   // 4) Insertar en pedidos, usando mesaToUse
   const { data, error: insertErr } = await supabaseClient
