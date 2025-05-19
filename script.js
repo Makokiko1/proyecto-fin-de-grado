@@ -612,6 +612,13 @@ function setupOrderButtons() {
   const billButton  = document.getElementById("bill-button");
 
   orderButton.addEventListener("click", async () => {
+     // 0) Leer mesa directamente de la URL:
+  const urlParams = new URLSearchParams(window.location.search);
+  const mesaParam = urlParams.get("table");
+  const mesaToUse = mesaParam ? parseInt(mesaParam, 10) : null;
+  if (!mesaToUse)
+    return alert("No se ha detectado la mesa en la URL. Usa la ruta con ?table=TU_NUM_MESA.");
+  
     if (cartItems.length === 0) return alert("Tu cesta está vacía.");
 
     // 1) Obtener usuario
@@ -668,26 +675,25 @@ const aplicaDescuento = (numeroPedido % 10 === 0) && !esInvitado;
     }
 
 
-// ya tienes mesaId arriba (URL o localStorage), úsalo directamente
-const mesaToUse = mesaId;
 
 
-  // 4) Insertar en pedidos, usando mesaToUse
+
+// 4) INSERT usando mesaToUse:
   const { data, error: insertErr } = await supabaseClient
     .from("pedidos")
     .insert([{
-      usuario_id:       usuario.id,
-      mesa_id:          mesaToUse,
-      total:            totalFinal.toFixed(2),
-      aplica_descuento: aplicaDescuento,
+      usuario_id:        usuario.id,
+      mesa_id:           mesaToUse,
+      total:             totalFinal.toFixed(2),
+      aplica_descuento:  aplicaDescuento,
       descuento_aplicado: descuentoValor.toFixed(2),
-      items:            cartItems
+      items:             cartItems
     }])
     .select();
 
   if (insertErr) {
     console.error("Error al guardar el pedido:", insertErr);
-    return alert("Error al guardar el pedido. Comprueba la consola.");
+    return alert("Error al guardar el pedido. " + insertErr.message);
   }
 
   console.log("✅ Pedido insertado:", data);
