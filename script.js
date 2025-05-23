@@ -718,13 +718,36 @@ if (insertErr) {
     updateCartDisplay();
   });
 
-  billButton.addEventListener("click", () => {
-    if (cartItems.length === 0) return alert("No hay nada que cobrar.");
-    const total = document.getElementById("total-precio").textContent;
-    alert(`Total a pagar: ${total}`);
-    cartItems = [];
-    saveCartToLocalStorage();
-    updateCartDisplay();
+  billButton.addEventListener("click", async () => {
+    // 1) Validar que tenemos mesa
+    if (!mesaId) {
+      return alert("No se ha definido la mesa.");
+    }
+
+    // 2) Traer todos los totales de los pedidos de esta mesa
+    const { data: pedidosMesa, error } = await supabaseClient
+      .from("pedidos")
+      .select("total")
+      .eq("mesa_id", mesaId);
+
+    if (error) {
+      console.error("Error al obtener pedidos:", error);
+      return alert("No se pudo calcular la cuenta. Inténtalo de nuevo.");
+    }
+
+    // 3) Si no hay pedidos
+    if (!pedidosMesa || pedidosMesa.length === 0) {
+      return alert(`No hay pedidos para la mesa ${mesaId}.`);
+    }
+
+    // 4) Sumar todos los totales
+    const sumaTotal = pedidosMesa
+      .reduce((acc, fila) => acc + parseFloat(fila.total), 0)
+      .toFixed(2);
+
+    // 5) Mostrar mensaje con la cuenta
+    alert(`La cuenta total de la mesa ${mesaId} es €${sumaTotal}`);
   });
+
 }
 
