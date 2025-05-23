@@ -612,11 +612,13 @@ function setupOrderButtons() {
   const billButton  = document.getElementById("bill-button");
 
   orderButton.addEventListener("click", async () => {
-    if (cartItems.length === 0) return alert("Tu cesta está vacía.");
+    if (cartItems.length === 0) 
+      return alert("Tu cesta está vacía.");
 
     // 1) Obtener usuario
     const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData) return alert("Debes iniciar sesión para pedir.");
+    if (!userData) 
+      return alert("Debes iniciar sesión para pedir.");
 
     const { data: usuario, error: userErr } = await supabaseClient
       .from("usuarios")
@@ -628,13 +630,13 @@ function setupOrderButtons() {
       return alert("Error identificando usuario.");
     }
 
-    // 2) Contar pedidos del mes
+    // 2) Calcular número de pedido y descuento (igual que antes)...
     const now = new Date();
     const mes  = now.getMonth() + 1;
     const anio = now.getFullYear();
     const fechaInicio = `${anio}-${mes.toString().padStart(2, "0")}-01`;
 
-    const { data: pedidosMes, error: countErr } = await supabaseClient
+    const { data: pedidosMes = [], error: countErr } = await supabaseClient
       .from("pedidos")
       .select("id", { count: "exact" })
       .eq("usuario_id", usuario.id)
@@ -643,66 +645,60 @@ function setupOrderButtons() {
       console.error(countErr);
       return alert("No se pudo comprobar historial de pedidos.");
     }
-
-    const pedidosPrevios = pedidosMes.length;
-    const numeroPedido = pedidosPrevios + 1;
-
-// Condición extra: si el usuario es el Invitado, no hay descuento
-const esInvitado = (
-  userData.email === 'invitado@restaurante.com' || 
-  userData.username === 'Invitado'
-);
-
-// Aplicar 30% solo si es múltiplo de 10 **y** NO es el usuario Invitado
-const aplicaDescuento = (numeroPedido % 10 === 0) && !esInvitado;
-
+    const numeroPedido   = pedidosMes.length + 1;
+    const esInvitado     = (userData.email === 'invitado@restaurante.com' ||
+                            userData.username === 'Invitado');
+    const aplicaDescuento= (numeroPedido % 10 === 0) && !esInvitado;
 
     // 3) Calcular totales y descuento
     const totalOriginal = cartItems.reduce((sum, itm) => sum + itm.price * itm.quantity, 0);
     let descuentoValor  = 0;
     let totalFinal      = totalOriginal;
-
     if (aplicaDescuento) {
       descuentoValor = totalOriginal * 0.30;
       totalFinal     = totalOriginal - descuentoValor;
     }
 
+    // 4) Insertar en 'pedidos'
+    const { data: pedidoInsertado, error: insertErr } = await supabaseClient
+      .from("pedidos")
+      .insert([{
+        usuario_id:         usuario.id,
+        mesa_id:            mesaId,
+        total:              totalFinal.toFixed(2),
+        aplica_descuento:   aplicaDescuento,
+        descuento_aplicado: descuentoValor.toFixed(2),
+        fecha:              now.toISOString(),  // asegúrate de que tu campo 'fecha' exista
+      }])
+      .select("id")
+      .single();
 
-// ya tienes mesaId arriba (URL o localStorage), úsalo directamente
-const mesaToUse = mesaId;
+    if (insertErr || !pedidoInsertado) {
+      console.error("Error al guardar el pedido:", insertErr);
+      return alert("Error al guardar el pedido.");
+    }
 
+    const pedidoId = pedidoInsertado.id;
 
-  // 4) Insertar en pedidos, usando mesaToUse
-  const { data, error: insertErr } = await supabaseClient
-    .from("pedidos")
-    .insert([{
-      usuario_id:       usuario.id,
-      mesa_id:          mesaToUse,
-      total:            totalFinal.toFixed(2),
-      aplica_descuento: aplicaDescuento,
-      descuento_aplicado: descuentoValor.toFixed(2),
-      items:            cartItems
-    }])
-    .select();
+    // 5) Insertar cada línea en 'pedido_items'
+    const itemsParaInsertar = cartItems.map(item => ({
+      pedido_id:       pedidoId,
+      menu_item_id:    item.id,
+      cantidad:        item.quantity,
+      precio_unitario: item.price
+    }));
+    const { error: lineasErr } = await supabaseClient
+      .from("pedido_items")
+      .insert(itemsParaInsertar);
 
-  if (insertErr) {
-    console.error("Error al guardar el pedido:", insertErr);
-    return alert("Error al guardar el pedido. Comprueba la consola.");
-  }
+    if (lineasErr) {
+      console.error("Error al guardar las líneas del pedido:", lineasErr);
+      return alert("Pedido guardado, pero no se guardaron las líneas.");
+    }
 
-  console.log("✅ Pedido insertado:", data);
-
-
-  if (insertErr) {
-    console.error(insertErr);
-    return alert("Error al guardar el pedido.");
-  }
-
-
-    // 5) Actualizar UI y mensaje
+    // 6) Actualizar UI y mensaje
     const importeTexto = `$${totalFinal.toFixed(2)}`;
     if (aplicaDescuento) {
-      // Mostrar precio tachado y nuevo precio con estilo
       const totalSpan = document.getElementById("total-precio");
       totalSpan.innerHTML = `
         <del>$${totalOriginal.toFixed(2)}</del>
@@ -713,7 +709,7 @@ const mesaToUse = mesaId;
       alert(`Pedido #${numeroPedido} realizado. Total a pagar: ${importeTexto}`);
     }
 
-    // Limpiar carrito
+    // 7) Limpiar carrito
     cartItems = [];
     saveCartToLocalStorage();
     updateCartDisplay();
@@ -728,3 +724,4 @@ const mesaToUse = mesaId;
     updateCartDisplay();
   });
 }
+
