@@ -658,25 +658,28 @@ function setupOrderButtons() {
       descuentoValor = totalOriginal * 0.30;
       totalFinal     = totalOriginal - descuentoValor;
     }
+// … dentro de setupOrderButtons(), justo antes de insertar en pedido_items:
 
-    // 4) Insertar en 'pedidos'
-    const { data: pedidoInsertado, error: insertErr } = await supabaseClient
-      .from("pedidos")
-      .insert([{
-        usuario_id:         usuario.id,
-        mesa_id:            mesaId,
-        total:              totalFinal.toFixed(2),
-        aplica_descuento:   aplicaDescuento,
-        descuento_aplicado: descuentoValor.toFixed(2),
-        fecha:              now.toISOString(),  // asegúrate de que tu campo 'fecha' exista
-      }])
-      .select("id")
-      .single();
+// 4) Insertar en 'pedidos'
+const { data: pedidoInsertado, error: insertErr } = await supabaseClient
+  .from("pedidos")
+  .insert([{
+    usuario_id:         usuario.id,
+    mesa_id:            mesaId,
+    total:              totalFinal.toFixed(2),
+    aplica_descuento:   aplicaDescuento,
+    descuento_aplicado: descuentoValor.toFixed(2),
+    fecha:              now.toISOString(),
+    estado:             "PENDIENTE",          // <<< aquí
+    items:              JSON.stringify(cartItems)  // <<< o bien [], o lo que permita tu esquema
+  }])
+  .select("id")
+  .single();
 
-    if (insertErr || !pedidoInsertado) {
-      console.error("Error al guardar el pedido:", insertErr);
-      return alert("Error al guardar el pedido.");
-    }
+if (insertErr) {
+  console.error("Error al guardar el pedido:", insertErr);
+  return alert("Error al guardar el pedido.");
+}
 
     const pedidoId = pedidoInsertado.id;
 
