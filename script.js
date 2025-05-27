@@ -719,58 +719,51 @@ if (insertErr) {
   });
 
 billButton.addEventListener("click", async () => {
-  if (!mesaId) return alert("No se ha definido la mesa.");
+  // 1) Validar que tenemos mesa
+  if (!mesaId) {
+    return alert("No se ha definido la mesa.");
+  }
 
-  // Obtener todos los pedidos pendientes
+  // 2) Traer todos los totales de los pedidos de esta mesa
   const { data: pedidosMesa, error } = await supabaseClient
     .from("pedidos")
-    .select("id, total, usuario_id")
-    .eq("mesa_id", mesaId)
-    .eq("estado", "PENDIENTE");
+    .select("total")
+    .eq("mesa_id", mesaId);
 
-  if (error || pedidosMesa.length === 0) {
-    return alert("No hay pedidos pendientes para cerrar.");
+  if (error) {
+    console.error("Error al obtener pedidos:", error);
+    return alert("No se pudo calcular la cuenta. Inténtalo de nuevo.");
   }
 
-  const total = pedidosMesa.reduce((acc, p) => acc + parseFloat(p.total), 0);
-  const usuarioId = pedidosMesa[0].usuario_id;
-
-  // Consultar agrupaciones previas
-  const { data: prevAgrupaciones, error: agrupErr } = await supabaseClient
-    .from("pedido_mesa_completo")
-    .select("id")
-    .eq("usuario_id", usuarioId);
-
-  const numAgrupaciones = (agrupErr || !prevAgrupaciones) ? 0 : prevAgrupaciones.length;
-  const aplicaDescuento = !(await esInvitado(usuarioId)) && ((numAgrupaciones + 1) % 10 === 0);
-  const descuento = aplicaDescuento ? total * 0.3 : 0;
-  const totalFinal = total - descuento;
-
-  // Guardar agrupación
-  const { error: insertErr } = await supabaseClient
-    .from("pedido_mesa_completo")
-    .insert([{
-      mesa_id: mesaId,
-      usuario_id: usuarioId,
-      total: totalFinal.toFixed(2),
-      aplica_descuento: aplicaDescuento,
-      descuento_aplicado: descuento.toFixed(2),
-      pedidos_ids: pedidosMesa.map(p => p.id),
-      estado: "PAGADO"
-    }]);
-
-  if (insertErr) {
-    console.error("Error guardando agrupación:", insertErr);
-    return alert("Error al cerrar cuenta.");
+  // 3) Si no hay pedidos
+  if (!pedidosMesa || pedidosMesa.length === 0) {
+    return alert(`No hay pedidos para la mesa ${mesaId}.`);
   }
 
-  // Marcar pedidos como pagado
-  await supabaseClient
-    .from("pedidos")
-    .update({ estado: "PAGADO" })
-    .in("id", pedidosMesa.map(p => p.id));
+  // 4) Sumar todos los totales
+  let sumaTotal = pedidosMesa.reduce((acc, fila) => acc + parseFloat(fila.total), 0);
 
-  alert(`Cuenta cerrada. Total final: €${totalFinal.toFixed(2)}`);
+  // 5) Comprobar si toca aplicar descuento por fidelidad
+  const userData = JSON.parse(localStorage.getItem("user"));
+  const esInvitado = !userData || userData.email === 'invitado@restaurante.com';
+
+  try {
+    const { count, error: countErr } = await supabaseClient
+      .from("pedido_mesa_completo")
+      .select("id", { count: "exact", head: true });
+
+    if (countErr) {
+      console.error("Error contando pedidos completos:", countErr);
+    } else if (!esInvitado && count > 0 && count % 10 === 9) {
+      sumaTotal *= 0.7;
+      showToast("🎉 ¡Descuento aplicado! 30% en esta cuenta por fidelidad.");
+    }
+  } catch (e) {
+    console.error("Error al verificar descuento futuro:", e);
+  }
+
+  // 6) Mostrar mensaje con la cuenta final
+  alert(`La cuenta total de la mesa ${mesaId} es €${sumaTotal.toFixed(2)}`);
 });
 
 
