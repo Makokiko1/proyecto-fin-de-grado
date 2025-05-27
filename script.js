@@ -719,52 +719,81 @@ if (insertErr) {
   });
 
 billButton.addEventListener("click", async () => {
-  // 1) Validar que tenemos mesa
   if (!mesaId) {
     return alert("No se ha definido la mesa.");
   }
 
-  // 2) Traer todos los totales de los pedidos de esta mesa
-  const { data: pedidosMesa, error } = await supabaseClient
-    .from("pedidos")
-    .select("total")
-    .eq("mesa_id", mesaId);
-
-  if (error) {
-    console.error("Error al obtener pedidos:", error);
-    return alert("No se pudo calcular la cuenta. Inténtalo de nuevo.");
-  }
-
-  // 3) Si no hay pedidos
-  if (!pedidosMesa || pedidosMesa.length === 0) {
-    return alert(`No hay pedidos para la mesa ${mesaId}.`);
-  }
-
-  // 4) Sumar todos los totales
-  let sumaTotal = pedidosMesa.reduce((acc, fila) => acc + parseFloat(fila.total), 0);
-
-  // 5) Comprobar si toca aplicar descuento por fidelidad
   const userData = JSON.parse(localStorage.getItem("user"));
-  const esInvitado = !userData || userData.email === 'invitado@restaurante.com';
-
-  try {
-    const { count, error: countErr } = await supabaseClient
-      .from("pedido_mesa_completo")
-      .select("id", { count: "exact", head: true });
-
-    if (countErr) {
-      console.error("Error contando pedidos completos:", countErr);
-    } else if (!esInvitado && count > 0 && count % 10 === 9) {
-      sumaTotal *= 0.7;
-      showToast("🎉 ¡Descuento aplicado! 30% en esta cuenta por fidelidad.");
-    }
-  } catch (e) {
-    console.error("Error al verificar descuento futuro:", e);
+  if (!userData) {
+    return alert("No hay usuario autenticado.");
   }
 
-  // 6) Mostrar mensaje con la cuenta final
-  alert(`La cuenta total de la mesa ${mesaId} es €${sumaTotal.toFixed(2)}`);
+  // 1) Obtener usuario_id desde la tabla
+  const { data: usuario, error: userErr } = await supabaseClient
+    .from("usuarios")
+    .select("id")
+    .eq("email", userData.email)
+    .single();
+
+  if (userErr) {
+    console.error(userErr);
+    return alert("No se pudo identificar al usuario.");
+  }
+
+  const usuarioId = usuario.id;
+
+  // 2) Obtener pedidos PAGADOS de esa mesa y usuario
+  const { data: pedidos, error: pedidosErr } = await supabaseClient
+    .from("pedidos")
+    .select("id, total")
+    .eq("mesa_id", mesaId)
+    .eq("usuario_id", usuarioId)
+    .eq("estado", "PAGADO");
+
+  if (pedidosErr || !pedidos || pedidos.length === 0) {
+    console.error("Error al obtener pedidos PAGADOS:", pedidosErr);
+    return alert("No hay pedidos pagados para esta mesa.");
+  }
+
+  const totalSumado = pedidos.reduce((sum, p) => sum + parseFloat(p.total), 0);
+  const pedidosIds = pedidos.map(p => p.id);
+
+  // 3) Comprobar si se aplica descuento
+  const { count: totalCompletos, error: countErr } = await supabaseClient
+    .from("pedido_mesa_completo")
+    .select("id", { count: "exact", head: true });
+
+  const esInvitado = userData.email === "invitado@restaurante.com";
+  const aplicaDescuento = !esInvitado && totalCompletos % 10 === 9;
+  const descuentoValor = aplicaDescuento ? totalSumado * 0.3 : 0;
+  const totalFinal = totalSumado - descuentoValor;
+
+  // 4) Insertar en pedido_mesa_completo
+  const { error: insertErr } = await supabaseClient
+    .from("pedido_mesa_completo")
+    .insert([{
+      mesa_id: mesaId,
+      usuario_id: usuarioId,
+      fecha: new Date().toISOString(),
+      total: totalFinal.toFixed(2),
+      aplica_descuento: aplicaDescuento,
+      descuento_aplicado: descuentoValor.toFixed(2),
+      pedidos_ids: pedidosIds,
+      estado: "GENERADO"
+    }]);
+
+  if (insertErr) {
+    console.error("Error insertando pedido completo:", insertErr);
+    return alert("No se pudo generar la cuenta completa.");
+  }
+
+  if (aplicaDescuento) {
+    showToast("🎉 ¡Descuento aplicado! 30% en esta cuenta por fidelidad.");
+  }
+
+  alert(`La cuenta total de la mesa ${mesaId} es €${totalFinal.toFixed(2)}`);
 });
+
 
 
 }
