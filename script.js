@@ -776,4 +776,5 @@ billButton.addEventListener("click", async () => {
 
   // 5) Aquí deberías lanzar una acción aparte para confirmar pago y cambiar estados
 });
+
 }
