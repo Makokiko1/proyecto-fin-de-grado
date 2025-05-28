@@ -611,112 +611,72 @@ function setupOrderButtons() {
   const orderButton = document.getElementById("order-button");
   const billButton  = document.getElementById("bill-button");
 
-  orderButton.addEventListener("click", async () => {
-    if (cartItems.length === 0) 
-      return alert("Tu cesta está vacía.");
+orderButton.addEventListener("click", async () => {
+  if (cartItems.length === 0) 
+    return alert("Tu cesta está vacía.");
 
-    // 1) Obtener usuario
-    const userData = JSON.parse(localStorage.getItem("user"));
-    if (!userData) 
-      return alert("Debes iniciar sesión para pedir.");
+  const userData = JSON.parse(localStorage.getItem("user"));
+  if (!userData) 
+    return alert("Debes iniciar sesión para pedir.");
 
-    const { data: usuario, error: userErr } = await supabaseClient
-      .from("usuarios")
-      .select("id")
-      .eq("email", userData.email)
-      .single();
-    if (userErr) {
-      console.error(userErr);
-      return alert("Error identificando usuario.");
-    }
+  const { data: usuario, error: userErr } = await supabaseClient
+    .from("usuarios")
+    .select("id")
+    .eq("email", userData.email)
+    .single();
 
-    // 2) Calcular número de pedido y descuento (igual que antes)...
-    const now = new Date();
-    const mes  = now.getMonth() + 1;
-    const anio = now.getFullYear();
-    const fechaInicio = `${anio}-${mes.toString().padStart(2, "0")}-01`;
+  if (userErr) {
+    console.error(userErr);
+    return alert("Error identificando usuario.");
+  }
 
-    const { data: pedidosMes = [], error: countErr } = await supabaseClient
-      .from("pedidos")
-      .select("id", { count: "exact" })
-      .eq("usuario_id", usuario.id)
-      .gte("fecha", fechaInicio);
-    if (countErr) {
-      console.error(countErr);
-      return alert("No se pudo comprobar historial de pedidos.");
-    }
-    const numeroPedido   = pedidosMes.length + 1;
-    const esInvitado     = (userData.email === 'invitado@restaurante.com' ||
-                            userData.username === 'Invitado');
-    const aplicaDescuento= (numeroPedido % 10 === 0) && !esInvitado;
+  const now = new Date();
+  const totalOriginal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-    // 3) Calcular totales y descuento
-    const totalOriginal = cartItems.reduce((sum, itm) => sum + itm.price * itm.quantity, 0);
-    let descuentoValor  = 0;
-    let totalFinal      = totalOriginal;
-    if (aplicaDescuento) {
-      descuentoValor = totalOriginal * 0.30;
-      totalFinal     = totalOriginal - descuentoValor;
-    }
-// … dentro de setupOrderButtons(), justo antes de insertar en pedido_items:
+  const { data: pedidoInsertado, error: insertErr } = await supabaseClient
+    .from("pedidos")
+    .insert([{
+      usuario_id:         usuario.id,
+      mesa_id:            mesaId,
+      total:              totalOriginal.toFixed(2),
+      aplica_descuento:   false,
+      descuento_aplicado: 0,
+      fecha:              now.toISOString(),
+      estado:             "PENDIENTE",
+      items:              JSON.stringify(cartItems)
+    }])
+    .select("id")
+    .single();
 
-// 4) Insertar en 'pedidos'
-const { data: pedidoInsertado, error: insertErr } = await supabaseClient
-  .from("pedidos")
-  .insert([{
-    usuario_id:         usuario.id,
-    mesa_id:            mesaId,
-    total:              totalFinal.toFixed(2),
-    aplica_descuento:   aplicaDescuento,
-    descuento_aplicado: descuentoValor.toFixed(2),
-    fecha:              now.toISOString(),
-    estado:             "PENDIENTE",          // <<< aquí
-    items:              JSON.stringify(cartItems)  // <<< o bien [], o lo que permita tu esquema
-  }])
-  .select("id")
-  .single();
+  if (insertErr) {
+    console.error("Error al guardar el pedido:", insertErr);
+    return alert("Error al guardar el pedido.");
+  }
 
-if (insertErr) {
-  console.error("Error al guardar el pedido:", insertErr);
-  return alert("Error al guardar el pedido.");
-}
+  const pedidoId = pedidoInsertado.id;
 
-    const pedidoId = pedidoInsertado.id;
+  const itemsParaInsertar = cartItems.map(item => ({
+    pedido_id:       pedidoId,
+    menu_item_id:    item.id,
+    cantidad:        item.quantity,
+    precio_unitario: item.price
+  }));
 
-    // 5) Insertar cada línea en 'pedido_items'
-    const itemsParaInsertar = cartItems.map(item => ({
-      pedido_id:       pedidoId,
-      menu_item_id:    item.id,
-      cantidad:        item.quantity,
-      precio_unitario: item.price
-    }));
-    const { error: lineasErr } = await supabaseClient
-      .from("pedido_items")
-      .insert(itemsParaInsertar);
+  const { error: lineasErr } = await supabaseClient
+    .from("pedido_items")
+    .insert(itemsParaInsertar);
 
-    if (lineasErr) {
-      console.error("Error al guardar las líneas del pedido:", lineasErr);
-      return alert("Pedido guardado, pero no se guardaron las líneas.");
-    }
+  if (lineasErr) {
+    console.error("Error al guardar las líneas del pedido:", lineasErr);
+    return alert("Pedido guardado, pero no se guardaron las líneas.");
+  }
 
-    // 6) Actualizar UI y mensaje
-    const importeTexto = `$${totalFinal.toFixed(2)}`;
-    if (aplicaDescuento) {
-      const totalSpan = document.getElementById("total-precio");
-      totalSpan.innerHTML = `
-        <del>$${totalOriginal.toFixed(2)}</del>
-        <span class="text-success fw-bold ms-2">${importeTexto}</span>
-      `;
-      showToast(`🎉 ¡Pedido #${numeroPedido}! 30% de descuento aplicado. A pagar: ${importeTexto}`);
-    } else {
-      alert(`Pedido #${numeroPedido} realizado. Total a pagar: ${importeTexto}`);
-    }
+  showToast("📦 Tu pedido ha sido enviado al restaurante. En unos segundos estará disponible.");
 
-    // 7) Limpiar carrito
-    cartItems = [];
-    saveCartToLocalStorage();
-    updateCartDisplay();
-  });
+  cartItems = [];
+  saveCartToLocalStorage();
+  updateCartDisplay();
+});
 
 billButton.addEventListener("click", async () => {
   if (!mesaId) {
