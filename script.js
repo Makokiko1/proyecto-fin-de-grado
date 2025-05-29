@@ -148,6 +148,10 @@ async function handleGoogleUser(session) {
     username: perfil.username,
     email: perfil.email
   }));
+  if (mesaParamUrl) {
+  localStorage.setItem("mesaId", mesaParamUrl);
+}
+
 }
 
 // ========================
