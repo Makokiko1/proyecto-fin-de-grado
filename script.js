@@ -416,11 +416,12 @@ function renderIngredientesPersonalizacion(ingredientesData) {
 if (!ingredientesPersonalizados.find((item) => item.ingredienteId === ingrediente.id)) {
   ingredientesPersonalizados.push({
     ingredienteId: ingrediente.id,
-    nombre: ingrediente.nombre, // 👈 TE FALTA ESTO AQUÍ
+    nombre: ingrediente.nombre, // ✅ importante
     cantidad: ingredienteRel.cantidad_default,
     extra: 0,
   });
 }
+
 
   });
 }
