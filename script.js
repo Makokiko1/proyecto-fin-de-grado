@@ -738,9 +738,14 @@ billButton.addEventListener("click", async () => {
   const pedidosIds = pedidos.map(p => p.id);
 
   // 3) Comprobar si se aplica descuento
-  const { count: totalCompletos, error: countErr } = await supabaseClient
-    .from("pedido_mesa_completo")
-    .select("id", { count: "exact", head: true });
+ const { count: totalCompletos, error: countErr } = await supabaseClient
+  .from("pedido_mesa_completo")
+  .select("id", {
+    count: "exact",
+    head: true,
+  })
+  .eq("usuario_id", usuarioId);  // 🔒 sólo del usuario autenticado
+
 
   const esInvitado = userData.email === "invitado@restaurante.com";
   const aplicaDescuento = !esInvitado && totalCompletos % 10 === 9;
