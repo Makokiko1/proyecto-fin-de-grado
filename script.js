@@ -61,14 +61,28 @@ document.addEventListener("DOMContentLoaded", async () => {
   setupSearchBar();
   updateCartDisplay();
   setupOrderButtons();
-  // Mostrar saludo personalizado
+// Mostrar saludo personalizado
 const userInfo = JSON.parse(localStorage.getItem("user"));
 if (userInfo && userInfo.username) {
   const userWelcome = document.getElementById("user-welcome");
   if (userWelcome) {
     userWelcome.textContent = `¡Hola, ${userInfo.username}!`;
+
+    try {
+      const { count: pedidosCompletos, error: countError } = await supabaseClient
+        .from("pedido_mesa_completo")
+        .select("id", { count: "exact", head: true });
+
+      if (!countError) {
+        const restantes = 10 - (pedidosCompletos % 10 || 10);
+        userWelcome.textContent += `, te quedan ${restantes} visita${restantes === 1 ? '' : 's'} para disponer de un descuento especial`;
+      }
+    } catch (e) {
+      console.error("No se pudo calcular las visitas restantes:", e);
+    }
   }
 }
+
 
 
   // Configurar el botón de guardar personalización
