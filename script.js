@@ -357,11 +357,12 @@ function renderIngredientesPersonalizacion(ingredientesData) {
           if (existe) {
             existe.cantidad = ingredienteRel.cantidad_default;
           } else {
-            ingredientesPersonalizados.push({
-              ingredienteId: ingrediente.id,
-              cantidad: ingredienteRel.cantidad_default,
-              extra: 0,
-            });
+           ingredientesPersonalizados.push({
+  ingredienteId: ingrediente.id,
+  nombre: ingrediente.nombre, // 👈 nuevo
+  cantidad: ingredienteRel.cantidad_default,
+  extra: 0,
+});
           }
         }
       });
@@ -412,13 +413,15 @@ function renderIngredientesPersonalizacion(ingredientesData) {
     container.appendChild(div);
 
     // Inicializar registro en la configuración personalizada si no existe
-    if (!ingredientesPersonalizados.find((item) => item.ingredienteId === ingrediente.id)) {
-      ingredientesPersonalizados.push({
-        ingredienteId: ingrediente.id,
-        cantidad: ingredienteRel.cantidad_default,
-        extra: 0,
-      });
-    }
+if (!ingredientesPersonalizados.find((item) => item.ingredienteId === ingrediente.id)) {
+  ingredientesPersonalizados.push({
+    ingredienteId: ingrediente.id,
+    nombre: ingrediente.nombre, // 👈 TE FALTA ESTO AQUÍ
+    cantidad: ingredienteRel.cantidad_default,
+    extra: 0,
+  });
+}
+
   });
 }
 
@@ -466,14 +469,14 @@ function updateCartDisplay() {
     if (item.personalizacion) {
      personalizacionText =
   `<ul class="mb-0 ms-3 mt-2 small text-muted">` +
-  item.personalizacion
-    .map((p) => {
-      const total = (p.cantidad || 0) + (p.extra || 0);
-      if (total === 0) return `<li>🧂 ${p.nombre}: sin</li>`;
-      if (p.extra) return `<li>🧂 ${p.nombre}: ${p.cantidad} + ${p.extra} extra</li>`;
-      return `<li>🧂 ${p.nombre}: ${p.cantidad}</li>`;
-    })
-    .join("") +
+item.personalizacion
+  .map((p) => {
+    const nombre = p.nombre || `Ingrediente ${p.ingredienteId}`;
+    if (p.cantidad === 0) return `<li>Sin ${nombre}</li>`;
+    if (p.extra > 0) return `<li>${nombre}: ${p.cantidad} + ${p.extra} extra</li>`;
+    return `<li>${nombre}: ${p.cantidad}</li>`;
+  })
+  .join("") +
   `</ul>`;
 
     }
