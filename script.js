@@ -75,6 +75,32 @@ if (userInfo && userInfo.username) {
   document
     .getElementById("save-customization")
     .addEventListener("click", guardarPersonalizacion);
+  
+
+      // Mostrar datos del usuario en el modal
+  const userNameEl = document.getElementById("user-name");
+  const userEmailEl = document.getElementById("user-email");
+  const userVisitsEl = document.getElementById("user-visits");
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+
+  if (user) {
+    userNameEl.textContent = user.user_metadata?.name || "Sin nombre";
+    userEmailEl.textContent = user.email || "Sin correo";
+
+    const { data: visitas } = await supabaseClient
+      .from("visitas_restaurante")
+      .select("restantes")
+      .eq("user_id", user.id)
+      .single();
+
+    userVisitsEl.textContent = visitas?.restantes ?? "0";
+  } else {
+    userNameEl.textContent = "Invitado";
+    userEmailEl.textContent = "-";
+    userVisitsEl.textContent = "-";
+  }
+
 });
 // ———————————————————————————————————————————
 // Función que busca/crea el usuario en tu tabla “usuarios”
@@ -682,6 +708,7 @@ orderButton.addEventListener("click", async () => {
   cartItems = [];
   saveCartToLocalStorage();
   updateCartDisplay();
+  
 });
 
 billButton.addEventListener("click", async () => {

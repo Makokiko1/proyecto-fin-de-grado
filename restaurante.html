@@ -40,6 +40,15 @@
         >
           Mi Cesta (<span id="cart-count">0</span>)
         </button>
+        <button
+  type="button"
+  class="btn btn-outline-light"
+  data-bs-toggle="modal"
+  data-bs-target="#userModal"
+>
+  Usuario
+</button>
+
       </div>
     </header>
 
@@ -115,6 +124,24 @@
     </div>
   </div>
 </div>
+
+<!-- MODAL DE USUARIO -->
+<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="userModalLabel">👤 Información del Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Nombre:</strong> <span id="user-name">Cargando...</span></p>
+        <p><strong>Correo:</strong> <span id="user-email">Cargando...</span></p>
+        <p><strong>Visitas hasta descuento:</strong> <span id="user-visits">Cargando...</span></p>
+      </div>
+    </div>
+  </div>
+</div>
+
 
     <!-- Footer -->
     <footer class="container-fluid bg-light text-center py-3">
