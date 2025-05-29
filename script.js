@@ -657,7 +657,8 @@ orderButton.addEventListener("click", async () => {
     .from("pedidos")
     .insert([{
       usuario_id:         usuario.id,
-      mesa_id:            mesaId,
+      mesa_id: parseInt(localStorage.getItem("mesaId")) || null,
+
       total:              totalOriginal.toFixed(2),
       aplica_descuento:   false,
       descuento_aplicado: 0,
