@@ -345,11 +345,13 @@ function renderIngredientesPersonalizacion(ingredientesData) {
           if (existe) {
             existe.cantidad = 0;
           } else {
-            ingredientesPersonalizados.push({
-              ingredienteId: ingrediente.id,
-              cantidad: 0,
-              extra: 0,
-            });
+          ingredientesPersonalizados.push({
+  ingredienteId: ingrediente.id,
+  nombre: ingrediente.nombre, // 👈 nuevo
+  cantidad: ingredienteRel.cantidad_default,
+  extra: 0,
+});
+
           }
         } else {
           if (existe) {
@@ -462,18 +464,18 @@ function updateCartDisplay() {
     // Si existe personalización se muestra (aquí se muestra de forma resumida)
     let personalizacionText = "";
     if (item.personalizacion) {
-      personalizacionText =
-        "<br><small>Personalización: " +
-        item.personalizacion
-          .map(
-            (p) =>
-              "Ingrediente " +
-              p.ingredienteId +
-              " -> Cantidad: " +
-              (p.cantidad + (p.extra || 0))
-          )
-          .join(", ") +
-        "</small>";
+     personalizacionText =
+  `<ul class="mb-0 ms-3 mt-2 small text-muted">` +
+  item.personalizacion
+    .map((p) => {
+      const total = (p.cantidad || 0) + (p.extra || 0);
+      if (total === 0) return `<li>🧂 ${p.nombre}: sin</li>`;
+      if (p.extra) return `<li>🧂 ${p.nombre}: ${p.cantidad} + ${p.extra} extra</li>`;
+      return `<li>🧂 ${p.nombre}: ${p.cantidad}</li>`;
+    })
+    .join("") +
+  `</ul>`;
+
     }
     li.innerHTML = `
       ${item.name} x ${item.quantity} ${personalizacionText}
