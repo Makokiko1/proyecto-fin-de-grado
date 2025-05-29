@@ -148,10 +148,6 @@ async function handleGoogleUser(session) {
     username: perfil.username,
     email: perfil.email
   }));
-  if (mesaParamUrl) {
-  localStorage.setItem("mesaId", mesaParamUrl);
-}
-
 }
 
 // ========================
@@ -661,8 +657,7 @@ orderButton.addEventListener("click", async () => {
     .from("pedidos")
     .insert([{
       usuario_id:         usuario.id,
-      mesa_id: parseInt(localStorage.getItem("mesaId")) || null,
-
+      mesa_id:            mesaId,
       total:              totalOriginal.toFixed(2),
       aplica_descuento:   false,
       descuento_aplicado: 0,
