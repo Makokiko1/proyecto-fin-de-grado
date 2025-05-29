@@ -71,48 +71,50 @@
       <h2 class="text-center mb-4">Nuestra Carta</h2>
       <div id="menu-container" class="row g-4"></div>
     </main>
-
-    <!-- Modal de Cesta -->
-    <div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="cartModalLabel">Mi Cesta</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <ul id="cart-items" class="list-group"></ul>
-            <div id="cart-empty" class="text-center py-3">La cesta está vacía.</div>
-            <p class="text-end mt-3 fw-bold">Total: <span id="total-precio">$0.00</span></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-success" id="order-button">Pedir</button>
-            <button type="button" class="btn btn-primary" id="bill-button">Solicitar cuenta</button>
-          </div>
+<!-- MODAL DE PERSONALIZACIÓN ACTUALIZADO -->
+<div class="modal fade" id="customizationModal" tabindex="-1" aria-labelledby="customizationModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="customizationModalLabel">Personaliza tu plato</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <div id="ingredients-container" class="row g-3">
+          <!-- Aquí se insertarán ingredientes como tarjetas -->
         </div>
       </div>
-    </div>
-
-    <!-- Modal de Personalización de Ingredientes -->
-    <div class="modal fade" id="customizationModal" tabindex="-1" aria-labelledby="customizationModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="customizationModalLabel">Personaliza tu plato</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">
-            <div id="ingredients-container">
-              <!-- Se llenará dinámicamente con los ingredientes y controles -->
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary" id="save-customization">Añadir a la Cesta</button>
-          </div>
-        </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="save-customization">Añadir a la Cesta</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- MODAL DE CESTA ACTUALIZADO -->
+<div class="modal fade" id="cartModal" tabindex="-1" aria-labelledby="cartModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cartModalLabel">🧺 Mi Cesta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <ul id="cart-items" class="list-group list-group-flush">
+          <!-- Los elementos de la cesta se llenan dinámicamente -->
+        </ul>
+        <div id="cart-empty" class="text-center py-3 text-muted">La cesta está vacía.</div>
+        <hr>
+        <p class="text-end mt-3 fw-bold fs-5">Total: <span id="total-precio">$0.00</span></p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success" id="order-button">🧾 Pedir</button>
+        <button type="button" class="btn btn-primary" id="bill-button">💳 Solicitar cuenta</button>
+      </div>
+    </div>
+  </div>
+</div>
 
     <!-- Footer -->
     <footer class="container-fluid bg-light text-center py-3">

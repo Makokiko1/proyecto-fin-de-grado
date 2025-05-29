@@ -120,3 +120,29 @@ h1, h2 {
   height: 300px;        /* altura fija (ajústala a lo que te guste) */
   object-fit: cover;    /* recorta/ensambla la imagen para llenar el contenedor */
 }
+/* Ingredientes tipo tarjetas */
+#ingredients-container .ingredient-card {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  transition: all 0.3s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+#ingredients-container .ingredient-card:hover {
+  background-color: #f1f1f1;
+  transform: scale(1.02);
+}
+
+/* Botones + y - */
+.ingredient-controls i {
+  font-size: 1.2rem;
+  cursor: pointer;
+  margin: 0 0.5rem;
+  color: #333;
+}
+.ingredient-controls i:hover {
+  color: #0d6efd;
+}
