@@ -731,7 +731,7 @@ billButton.addEventListener("click", async () => {
   // Obtener todos los pedidos de esa mesa y usuario
   const { data: pedidos, error: pedidosErr } = await supabaseClient
     .from("pedidos")
-    .select("id, total, aplica_descuento")
+    .select("id, total, aplica_descuento, items")
     .eq("mesa_id", mesaId)
     .eq("usuario_id", usuarioId);
 
