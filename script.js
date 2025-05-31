@@ -786,7 +786,17 @@ billButton.addEventListener("click", async () => {
     totalFinal = nuevoTotal + totalYaDescontado;
   }
 
-  alert(`La cuenta total de la mesa ${mesaId} es €${totalFinal.toFixed(2)}`);
+  const resumenPlatos = pedidos.map(p => {
+  try {
+    const items = JSON.parse(p.items);
+    return items.map(i => `${i.name} x${i.quantity}`).join(", ");
+  } catch (e) {
+    return "[items no disponibles]";
+  }
+}).join(", ");
+
+alert(`Has pedido ${resumenPlatos}.\nTotal a pagar: €${totalFinal.toFixed(2)}`);
+
 });
 
 }
