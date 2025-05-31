@@ -766,20 +766,21 @@ billButton.addEventListener("click", async () => {
 if (aplicaDescuento) {
   showToast("🎉 ¡Descuento aplicado! 30% en esta cuenta por fidelidad.");
 
-  const descuentoUnitario = (totalSumado * 0.3) / pedidosIds.length;
+  const descuentoUnitario = descuentoValor / pedidosIds.length;
+  const nuevoTotalUnitario = totalFinal / pedidosIds.length;
 
-  // Aplicar descuento a cada pedido proporcionalmente
   const updates = pedidosIds.map(async (id) => {
     const { error: updateErr } = await supabaseClient
       .from("pedidos")
       .update({
         aplica_descuento: true,
-        descuento_aplicado: descuentoUnitario.toFixed(2)
+        descuento_aplicado: descuentoUnitario.toFixed(2),
+        total: nuevoTotalUnitario.toFixed(2) // 👈 ACTUALIZA el TOTAL también
       })
       .eq("id", id);
 
     if (updateErr) {
-      console.error("Error actualizando descuento en pedido " + id, updateErr);
+      console.error("Error actualizando pedido con descuento:", updateErr);
     }
   });
 
