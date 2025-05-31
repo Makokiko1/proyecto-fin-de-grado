@@ -709,16 +709,12 @@ orderButton.addEventListener("click", async () => {
 });
 
 billButton.addEventListener("click", async () => {
-  if (!mesaId) {
-    return alert("No se ha definido la mesa.");
-  }
+  if (!mesaId) return alert("No se ha definido la mesa.");
 
   const userData = JSON.parse(localStorage.getItem("user"));
-  if (!userData) {
-    return alert("No hay usuario autenticado.");
-  }
+  if (!userData) return alert("No hay usuario autenticado.");
 
-  // 1) Obtener usuario_id desde la tabla
+  // Obtener usuario_id desde la tabla
   const { data: usuario, error: userErr } = await supabaseClient
     .from("usuarios")
     .select("id")
@@ -732,10 +728,10 @@ billButton.addEventListener("click", async () => {
 
   const usuarioId = usuario.id;
 
-  // 2) Obtener todos los pedidos de esa mesa y usuario (independientemente del estado)
+  // Obtener todos los pedidos de esa mesa y usuario
   const { data: pedidos, error: pedidosErr } = await supabaseClient
     .from("pedidos")
-    .select("id, total")
+    .select("id, total, aplica_descuento")
     .eq("mesa_id", mesaId)
     .eq("usuario_id", usuarioId);
 
@@ -744,52 +740,53 @@ billButton.addEventListener("click", async () => {
     return alert("No hay pedidos para esta mesa.");
   }
 
-  const totalSumado = pedidos.reduce((sum, p) => sum + parseFloat(p.total), 0);
-  const pedidosIds = pedidos.map(p => p.id);
+  const pedidosYaDescontados = pedidos.filter(p => p.aplica_descuento);
+  const pedidosSinDescuento  = pedidos.filter(p => !p.aplica_descuento);
 
-  // 3) Comprobar si se aplica descuento
- const { count: totalCompletos, error: countErr } = await supabaseClient
-  .from("pedido_mesa_completo")
-  .select("id", {
-    count: "exact",
-    head: true,
-  })
-  .eq("usuario_id", usuarioId);  // 🔒 sólo del usuario autenticado
+  const totalYaDescontado = pedidosYaDescontados.reduce((sum, p) => sum + parseFloat(p.total), 0);
+  const totalSinDescuento = pedidosSinDescuento.reduce((sum, p) => sum + parseFloat(p.total), 0);
 
+  // Verificar si el usuario tiene derecho al descuento
+  const { count: totalCompletos, error: countErr } = await supabaseClient
+    .from("pedido_mesa_completo")
+    .select("id", { count: "exact", head: true })
+    .eq("usuario_id", usuarioId);
 
   const esInvitado = userData.email === "invitado@restaurante.com";
   const aplicaDescuento = !esInvitado && totalCompletos % 10 === 9;
-  const descuentoValor = aplicaDescuento ? totalSumado * 0.3 : 0;
-  const totalFinal = totalSumado - descuentoValor;
 
-  // 4) Mostrar resumen con posible descuento
-if (aplicaDescuento) {
-  showToast("🎉 ¡Descuento aplicado! 30% en esta cuenta por fidelidad.");
+  let totalFinal = totalYaDescontado + totalSinDescuento;
+  let descuentoAplicado = 0;
 
-  const descuentoUnitario = (totalSumado * 0.3) / pedidosIds.length;
-  const nuevoTotalUnitario = totalFinal / pedidosIds.length;
+  if (aplicaDescuento && pedidosSinDescuento.length > 0) {
+    descuentoAplicado = totalSinDescuento * 0.30;
+    const nuevoTotal = totalSinDescuento - descuentoAplicado;
+    const nuevoTotalUnitario = nuevoTotal / pedidosSinDescuento.length;
+    const descuentoUnitario = descuentoAplicado / pedidosSinDescuento.length;
 
-  const updates = pedidosIds.map(async (id) => {
-    const { error: updateErr } = await supabaseClient
-      .from("pedidos")
-      .update({
-        aplica_descuento: true,
-        descuento_aplicado: descuentoUnitario.toFixed(2),
-        total: nuevoTotalUnitario.toFixed(2)
-      })
-      .eq("id", id);
+    // Actualizar solo los pedidos sin descuento
+    const updates = pedidosSinDescuento.map(async (p) => {
+      const { error: updateErr } = await supabaseClient
+        .from("pedidos")
+        .update({
+          aplica_descuento: true,
+          descuento_aplicado: descuentoUnitario.toFixed(2),
+          total: nuevoTotalUnitario.toFixed(2)
+        })
+        .eq("id", p.id);
 
-    if (updateErr) {
-      console.error("Error actualizando pedido con descuento:", updateErr);
-    }
-  });
+      if (updateErr) {
+        console.error("Error actualizando pedido con descuento:", updateErr);
+      }
+    });
 
-  await Promise.all(updates);
-}
+    await Promise.all(updates);
+
+    showToast("🎉 ¡Descuento aplicado! 30% a los nuevos pedidos.");
+    totalFinal = nuevoTotal + totalYaDescontado;
+  }
 
   alert(`La cuenta total de la mesa ${mesaId} es €${totalFinal.toFixed(2)}`);
-
-  // 5) Aquí deberías lanzar una acción aparte para confirmar pago y cambiar estados
 });
 
 }
