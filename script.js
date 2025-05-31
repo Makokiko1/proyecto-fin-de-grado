@@ -80,7 +80,7 @@ if (userInfo && userInfo.username && userInfo.email !== "invitado@restaurante.co
       const { count: pedidosCompletos, error: countError } = await supabaseClient
         .from("pedido_mesa_completo")
         .select("id", { count: "exact", head: true })
-        .eq("usuario_id", usuario.id);  // ✅ solo los suyos
+        .eq("usuario_id", usuario.id);  
 
       if (!countError) {
         const restantes = 10 - (pedidosCompletos % 10 || 10);
@@ -763,9 +763,28 @@ billButton.addEventListener("click", async () => {
   const totalFinal = totalSumado - descuentoValor;
 
   // 4) Mostrar resumen con posible descuento
-  if (aplicaDescuento) {
-    showToast("🎉 ¡Descuento aplicado! 30% en esta cuenta por fidelidad.");
-  }
+if (aplicaDescuento) {
+  showToast("🎉 ¡Descuento aplicado! 30% en esta cuenta por fidelidad.");
+
+  const descuentoUnitario = (totalSumado * 0.3) / pedidosIds.length;
+
+  // Aplicar descuento a cada pedido proporcionalmente
+  const updates = pedidosIds.map(async (id) => {
+    const { error: updateErr } = await supabaseClient
+      .from("pedidos")
+      .update({
+        aplica_descuento: true,
+        descuento_aplicado: descuentoUnitario.toFixed(2)
+      })
+      .eq("id", id);
+
+    if (updateErr) {
+      console.error("Error actualizando descuento en pedido " + id, updateErr);
+    }
+  });
+
+  await Promise.all(updates);
+}
 
   alert(`La cuenta total de la mesa ${mesaId} es €${totalFinal.toFixed(2)}`);
 
