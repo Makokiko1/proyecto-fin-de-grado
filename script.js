@@ -766,25 +766,41 @@ billButton.addEventListener("click", async () => {
 if (aplicaDescuento) {
   showToast("🎉 ¡Descuento aplicado! 30% en esta cuenta por fidelidad.");
 
-  const descuentoUnitario = descuentoValor / pedidosIds.length;
-  const nuevoTotalUnitario = totalFinal / pedidosIds.length;
+  // Primero, consulta los pedidos de nuevo, pero incluyendo los campos extra
+  const { data: pedidosConDetalles, error: detallesErr } = await supabaseClient
+    .from("pedidos")
+    .select("id, total, aplica_descuento")
+    .in("id", pedidosIds);
 
-  const updates = pedidosIds.map(async (id) => {
-    const { error: updateErr } = await supabaseClient
-      .from("pedidos")
-      .update({
-        aplica_descuento: true,
-        descuento_aplicado: descuentoUnitario.toFixed(2),
-        total: nuevoTotalUnitario.toFixed(2) // 👈 ACTUALIZA el TOTAL también
-      })
-      .eq("id", id);
+  if (detallesErr) {
+    console.error("Error al comprobar descuentos existentes:", detallesErr);
+    return;
+  }
 
-    if (updateErr) {
-      console.error("Error actualizando pedido con descuento:", updateErr);
-    }
-  });
+  // Filtra solo los pedidos que no tengan ya descuento
+  const pedidosSinDescuento = pedidosConDetalles.filter(p => !p.aplica_descuento);
 
-  await Promise.all(updates);
+  if (pedidosSinDescuento.length > 0) {
+    const descuentoUnitario = (totalSumado * 0.3) / pedidosIds.length;
+    const nuevoTotalUnitario = totalFinal / pedidosIds.length;
+
+    const updates = pedidosSinDescuento.map(async (pedido) => {
+      const { error: updateErr } = await supabaseClient
+        .from("pedidos")
+        .update({
+          aplica_descuento: true,
+          descuento_aplicado: descuentoUnitario.toFixed(2),
+          total: nuevoTotalUnitario.toFixed(2)
+        })
+        .eq("id", pedido.id);
+
+      if (updateErr) {
+        console.error("Error actualizando descuento en pedido:", updateErr);
+      }
+    });
+
+    await Promise.all(updates);
+  }
 }
 
   alert(`La cuenta total de la mesa ${mesaId} es €${totalFinal.toFixed(2)}`);
