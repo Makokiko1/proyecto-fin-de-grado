@@ -256,7 +256,7 @@ function displayMenuItems(categoryId) {
       <div class="card-body d-flex flex-column">
         <h5 class="card-title">${item.name}</h5>
         <p class="card-text">${item.description}</p>
-        <p class="fw-bold text-success">$${parseFloat(item.price).toFixed(2)}</p>
+        <p class="fw-bold text-success">€${parseFloat(item.price).toFixed(2)}</p>
         <button class="btn btn-primary mt-auto"
                 onclick="mostrarPersonalizacion(${item.id})">
           Añadir
@@ -507,7 +507,7 @@ item.personalizacion
     }
     li.innerHTML = `
       ${item.name} x ${item.quantity} ${personalizacionText}
-      <span>$${(item.price * item.quantity).toFixed(2)}</span>
+      <span>€${(item.price * item.quantity).toFixed(2)}</span>
     `;
     // Botón para eliminar el producto
     const deleteBtn = document.createElement("button");
@@ -529,7 +529,7 @@ item.personalizacion
     return acc + (item.price + extrasCost) * item.quantity;
   }, 0);
   
-  document.getElementById("total-precio").textContent = `$${totalPrice.toFixed(2)}`;
+  document.getElementById("total-precio").textContent = `€${totalPrice.toFixed(2)}`;
 
   const cartEmptyMessage = document.getElementById("cart-empty");
   cartEmptyMessage.style.display = cartItems.length === 0 ? "block" : "none";
@@ -622,7 +622,7 @@ function renderSearchResults(items) {
         <div class="card-body d-flex flex-column">
           <h5 class="card-title">${item.name}</h5>
           <p class="card-text">${item.description}</p>
-          <p class="fw-bold text-success">$${parseFloat(item.price).toFixed(2)}</p>
+          <p class="fw-bold text-success">€${parseFloat(item.price).toFixed(2)}</p>
           <button class="btn btn-primary mt-auto" onclick="mostrarPersonalizacion(${item.id})">
             Añadir
           </button>
