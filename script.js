@@ -858,21 +858,31 @@ if (summaryButton) {
 
     resumenHTML += `</ul><hr><p><strong>Total actual: €${total.toFixed(2)}</strong></p>`;
 
-    const { count: completos, error: countErr } = await supabaseClient
-      .from("pedido_mesa_completo")
-      .select("id", { count: "exact", head: true })
-      .eq("usuario_id", usuarioId);
+  const esInvitado = userData.email === "invitado@restaurante.com";
 
-    if (!countErr) {
-      const restantes = 10 - (completos % 10 || 10);
-      resumenHTML += `<p>🔁 Te quedan <strong>${restantes}</strong> visita${restantes === 1 ? "" : "s"} para un descuento.</p>`;
+if (!esInvitado) {
+  const { count: completos, error: countErr } = await supabaseClient
+    .from("pedido_mesa_completo")
+    .select("id", { count: "exact", head: true })
+    .eq("usuario_id", usuarioId);
 
-      if (restantes === 1) {
-        resumenHTML += `<div class="alert alert-success mt-2">
-          🎉 ¡Felicidades! En tu próxima visita recibirás un <strong>30% de descuento</strong>.
-        </div>`;
-      }
+  if (!countErr) {
+    const restantes = 10 - (completos % 10 || 10);
+
+    if (restantes === 1) {
+      const totalConDescuento = total * 0.7;
+      resumenHTML += `
+        <div class="alert alert-success mt-2">
+          🎉 ¡Felicidades! En tu próxima visita recibirás un <strong>30% de descuento</strong>.<br/>
+          <strong>Total con descuento: €${totalConDescuento.toFixed(2)}</strong>
+        </div>
+      `;
+    } else if (restantes > 1) {
+      resumenHTML += `<p>🔁 Te quedan <strong>${restantes}</strong> visita${restantes > 1 ? "s" : ""} para un descuento.</p>`;
     }
+  }
+}
+
 
     const resumenModal = document.createElement("div");
     resumenModal.innerHTML = `
