@@ -883,6 +883,11 @@ if (!esInvitado) {
   }
 }
 
+    // Eliminar modal anterior si existe
+const modalAntiguo = document.getElementById("summaryModal");
+if (modalAntiguo) {
+  modalAntiguo.parentElement.removeChild(modalAntiguo);
+}
 
     const resumenModal = document.createElement("div");
     resumenModal.innerHTML = `
