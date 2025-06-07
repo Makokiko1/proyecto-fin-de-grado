@@ -638,94 +638,7 @@ function renderSearchResults(items) {
 // Botones para procesar pedido y cuenta
 // ========================
 function setupOrderButtons() {
-  summaryButton.addEventListener("click", async () => {
-  if (!mesaId) return alert("No se ha definido la mesa.");
-  const userData = JSON.parse(localStorage.getItem("user"));
-  if (!userData) return alert("No hay usuario autenticado.");
-
-  // Obtener usuario_id desde la tabla
-  const { data: usuario, error: userErr } = await supabaseClient
-    .from("usuarios")
-    .select("id")
-    .eq("email", userData.email)
-    .single();
-
-  if (userErr) {
-    console.error(userErr);
-    return alert("No se pudo identificar al usuario.");
-  }
-
-  const usuarioId = usuario.id;
-
-  // Obtener todos los pedidos de esa mesa y usuario
-  const { data: pedidos, error: pedidosErr } = await supabaseClient
-    .from("pedidos")
-    .select("id, total, aplica_descuento, items")
-    .eq("mesa_id", mesaId)
-    .eq("usuario_id", usuarioId);
-
-  if (pedidosErr || !pedidos || pedidos.length === 0) {
-    console.error("Error al obtener pedidos:", pedidosErr);
-    return alert("No hay pedidos para esta mesa.");
-  }
-
-  let total = 0;
-  let resumenHTML = `<h5>🧾 Resumen de pedidos:</h5><ul style="padding-left: 1rem;">`;
-
-  pedidos.forEach(p => {
-    try {
-      const items = JSON.parse(p.items);
-      items.forEach(i => {
-        resumenHTML += `<li>${i.name} x${i.quantity} - €${(i.price * i.quantity).toFixed(2)}</li>`;
-        total += i.price * i.quantity;
-      });
-    } catch (e) {
-      resumenHTML += `<li>[items no disponibles]</li>`;
-    }
-  });
-
-  resumenHTML += `</ul><hr><p><strong>Total actual: €${total.toFixed(2)}</strong></p>`;
-
-  // Visitas restantes
-  const { count: completos, error: countErr } = await supabaseClient
-    .from("pedido_mesa_completo")
-    .select("id", { count: "exact", head: true })
-    .eq("usuario_id", usuarioId);
-
-  if (!countErr) {
-    const restantes = 10 - (completos % 10 || 10);
-    resumenHTML += `<p>🔁 Te quedan <strong>${restantes}</strong> visita${restantes === 1 ? "" : "s"} para un descuento.</p>`;
-
-    if (restantes === 1) {
-      resumenHTML += `<div class="alert alert-success mt-2">
-        🎉 ¡Felicidades! En tu próxima visita recibirás un <strong>30% de descuento</strong>.
-      </div>`;
-    }
-  }
-
-  // Mostrar modal
-  const resumenModal = document.createElement("div");
-  resumenModal.innerHTML = `
-    <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-lg modal-dialog-centered">
-        <div class="modal-content">
-          <div class="modal-header bg-info text-white">
-            <h5 class="modal-title">Resumen del Pedido</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-          </div>
-          <div class="modal-body">${resumenHTML}</div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-  document.body.appendChild(resumenModal);
-  const bsModal = new bootstrap.Modal(document.getElementById("summaryModal"));
-  bsModal.show();
-});
-
+  
   const orderButton = document.getElementById("order-button");
   const billButton  = document.getElementById("bill-button");
 
@@ -886,5 +799,92 @@ billButton.addEventListener("click", async () => {
 alert(`Has pedido ${resumenPlatos}.\nTotal a pagar: €${totalFinal.toFixed(2)}`);
 
 });
+const summaryButton = document.getElementById("summary-button");
+
+if (summaryButton) {
+  summaryButton.addEventListener("click", async () => {
+    if (!mesaId) return alert("No se ha definido la mesa.");
+    const userData = JSON.parse(localStorage.getItem("user"));
+    if (!userData) return alert("No hay usuario autenticado.");
+
+    const { data: usuario, error: userErr } = await supabaseClient
+      .from("usuarios")
+      .select("id")
+      .eq("email", userData.email)
+      .single();
+
+    if (userErr) {
+      console.error(userErr);
+      return alert("No se pudo identificar al usuario.");
+    }
+
+    const usuarioId = usuario.id;
+
+    const { data: pedidos, error: pedidosErr } = await supabaseClient
+      .from("pedidos")
+      .select("id, total, aplica_descuento, items")
+      .eq("mesa_id", mesaId)
+      .eq("usuario_id", usuarioId);
+
+    if (pedidosErr || !pedidos || pedidos.length === 0) {
+      console.error("Error al obtener pedidos:", pedidosErr);
+      return alert("No hay pedidos para esta mesa.");
+    }
+
+    let total = 0;
+    let resumenHTML = `<h5>🧾 Resumen de pedidos:</h5><ul style="padding-left: 1rem;">`;
+
+    pedidos.forEach(p => {
+      try {
+        const items = JSON.parse(p.items);
+        items.forEach(i => {
+          resumenHTML += `<li>${i.name} x${i.quantity} - €${(i.price * i.quantity).toFixed(2)}</li>`;
+          total += i.price * i.quantity;
+        });
+      } catch (e) {
+        resumenHTML += `<li>[items no disponibles]</li>`;
+      }
+    });
+
+    resumenHTML += `</ul><hr><p><strong>Total actual: €${total.toFixed(2)}</strong></p>`;
+
+    const { count: completos, error: countErr } = await supabaseClient
+      .from("pedido_mesa_completo")
+      .select("id", { count: "exact", head: true })
+      .eq("usuario_id", usuarioId);
+
+    if (!countErr) {
+      const restantes = 10 - (completos % 10 || 10);
+      resumenHTML += `<p>🔁 Te quedan <strong>${restantes}</strong> visita${restantes === 1 ? "" : "s"} para un descuento.</p>`;
+
+      if (restantes === 1) {
+        resumenHTML += `<div class="alert alert-success mt-2">
+          🎉 ¡Felicidades! En tu próxima visita recibirás un <strong>30% de descuento</strong>.
+        </div>`;
+      }
+    }
+
+    const resumenModal = document.createElement("div");
+    resumenModal.innerHTML = `
+      <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+              <h5 class="modal-title">Resumen del Pedido</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">${resumenHTML}</div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.appendChild(resumenModal);
+    const bsModal = new bootstrap.Modal(document.getElementById("summaryModal"));
+    bsModal.show();
+  });
+}
 
 }
