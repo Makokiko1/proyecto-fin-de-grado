@@ -512,16 +512,17 @@ item.personalizacion
   `</ul>`;
 
     }
-    li.innerHTML = `
-      ${item.name} x ${item.quantity} ${personalizacionText}
-      let totalExtras = 0;
+let totalExtras = 0;
 if (item.personalizacion) {
   totalExtras = item.personalizacion.reduce((sum, ing) => sum + ((ing.extra || 0) * 1), 0);
 }
 const precioLinea = (item.price + totalExtras) * item.quantity;
-<span>€${precioLinea.toFixed(2)}</span>
 
-    `;
+li.innerHTML = `
+  ${item.name} x ${item.quantity} ${personalizacionText}
+  <span>€${precioLinea.toFixed(2)}</span>
+`;
+;
     // Botón para eliminar el producto
     const deleteBtn = document.createElement("button");
     deleteBtn.classList.add("btn", "btn-danger", "btn-sm");
