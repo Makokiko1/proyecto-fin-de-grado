@@ -534,15 +534,10 @@ li.innerHTML = `
     cartItemsList.appendChild(li);
   });
 
-  const totalPrice = cartItems.reduce((acc, item) => {
-    let extrasCost = 0;
-  
-    if (item.personalizacion) {
-      extrasCost = item.personalizacion.reduce((sum, ing) => sum + (ing.extra || 0), 0);
-    }
-  
-    return acc + (item.price + extrasCost) * item.quantity;
-  }, 0);
+const totalPrice = cartItems.reduce((acc, item) => {
+  return acc + item.price * item.quantity;
+}, 0);
+
   
   document.getElementById("total-precio").textContent = `€${totalPrice.toFixed(2)}`;
 
