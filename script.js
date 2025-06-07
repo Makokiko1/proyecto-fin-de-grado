@@ -638,65 +638,72 @@ function renderSearchResults(items) {
 // Botones para procesar pedido y cuenta
 // ========================
 function setupOrderButtons() {
-  const summaryButton = document.getElementById("summary-button");
+  summaryButton.addEventListener("click", async () => {
+  if (!mesaId) return alert("No se ha definido la mesa.");
+  const userData = JSON.parse(localStorage.getItem("user"));
+  if (!userData) return alert("No hay usuario autenticado.");
 
-summaryButton.addEventListener("click", async () => {
-  if (cartItems.length === 0)
-    return alert("Tu cesta está vacía.");
+  // Obtener usuario_id desde la tabla
+  const { data: usuario, error: userErr } = await supabaseClient
+    .from("usuarios")
+    .select("id")
+    .eq("email", userData.email)
+    .single();
 
-  let resumenHTML = `
-    <h5>📝 Resumen del pedido:</h5>
-    <ul style="padding-left: 1rem;">
-  `;
+  if (userErr) {
+    console.error(userErr);
+    return alert("No se pudo identificar al usuario.");
+  }
+
+  const usuarioId = usuario.id;
+
+  // Obtener todos los pedidos de esa mesa y usuario
+  const { data: pedidos, error: pedidosErr } = await supabaseClient
+    .from("pedidos")
+    .select("id, total, aplica_descuento, items")
+    .eq("mesa_id", mesaId)
+    .eq("usuario_id", usuarioId);
+
+  if (pedidosErr || !pedidos || pedidos.length === 0) {
+    console.error("Error al obtener pedidos:", pedidosErr);
+    return alert("No hay pedidos para esta mesa.");
+  }
 
   let total = 0;
+  let resumenHTML = `<h5>🧾 Resumen de pedidos:</h5><ul style="padding-left: 1rem;">`;
 
-  cartItems.forEach(item => {
-    const subtotal = item.price * item.quantity;
-    total += subtotal;
-
-    let linea = `<li>${item.name} x${item.quantity} - €${subtotal.toFixed(2)}`;
-
-    if (item.personalizacion) {
-      const detalles = item.personalizacion.map(p => {
-        if (p.cantidad === 0) return `sin ${p.nombre}`;
-        if (p.extra > 0) return `${p.nombre} +${p.extra}`;
-        return `${p.nombre}`;
-      }).join(", ");
-      linea += ` <br><small class="text-muted">(${detalles})</small>`;
+  pedidos.forEach(p => {
+    try {
+      const items = JSON.parse(p.items);
+      items.forEach(i => {
+        resumenHTML += `<li>${i.name} x${i.quantity} - €${(i.price * i.quantity).toFixed(2)}</li>`;
+        total += i.price * i.quantity;
+      });
+    } catch (e) {
+      resumenHTML += `<li>[items no disponibles]</li>`;
     }
-
-    linea += `</li>`;
-    resumenHTML += linea;
   });
 
-  resumenHTML += `</ul><hr><p><strong>Total: €${total.toFixed(2)}</strong></p>`;
+  resumenHTML += `</ul><hr><p><strong>Total actual: €${total.toFixed(2)}</strong></p>`;
 
-  const userData = JSON.parse(localStorage.getItem("user"));
-  if (userData && userData.email !== "invitado@restaurante.com") {
-    const { data: usuario, error: userErr } = await supabaseClient
-      .from("usuarios")
-      .select("id")
-      .eq("email", userData.email)
-      .single();
+  // Visitas restantes
+  const { count: completos, error: countErr } = await supabaseClient
+    .from("pedido_mesa_completo")
+    .select("id", { count: "exact", head: true })
+    .eq("usuario_id", usuarioId);
 
-    if (!userErr && usuario) {
-      const { count: completos, error: countErr } = await supabaseClient
-        .from("pedido_mesa_completo")
-        .select("id", { count: "exact", head: true })
-        .eq("usuario_id", usuario.id);
+  if (!countErr) {
+    const restantes = 10 - (completos % 10 || 10);
+    resumenHTML += `<p>🔁 Te quedan <strong>${restantes}</strong> visita${restantes === 1 ? "" : "s"} para un descuento.</p>`;
 
-      const restantes = 10 - (completos % 10 || 10);
-      resumenHTML += `<p>🔁 Te quedan <strong>${restantes}</strong> visita${restantes === 1 ? "" : "s"} para un descuento.</p>`;
-
-      if (restantes === 1) {
-        resumenHTML += `<div class="alert alert-success mt-2">
-          🎉 ¡Felicidades! En tu próxima visita recibirás un <strong>30% de descuento</strong> automático en tus pedidos.
-        </div>`;
-      }
+    if (restantes === 1) {
+      resumenHTML += `<div class="alert alert-success mt-2">
+        🎉 ¡Felicidades! En tu próxima visita recibirás un <strong>30% de descuento</strong>.
+      </div>`;
     }
   }
 
+  // Mostrar modal
   const resumenModal = document.createElement("div");
   resumenModal.innerHTML = `
     <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
@@ -715,7 +722,6 @@ summaryButton.addEventListener("click", async () => {
     </div>
   `;
   document.body.appendChild(resumenModal);
-
   const bsModal = new bootstrap.Modal(document.getElementById("summaryModal"));
   bsModal.show();
 });
