@@ -516,7 +516,8 @@ let totalExtras = 0;
 if (item.personalizacion) {
   totalExtras = item.personalizacion.reduce((sum, ing) => sum + ((ing.extra || 0) * 1), 0);
 }
-const precioLinea = (item.price + totalExtras) * item.quantity;
+const precioLinea = item.price * item.quantity;
+
 
 li.innerHTML = `
   ${item.name} x ${item.quantity} ${personalizacionText}
