@@ -274,10 +274,17 @@ function displayMenuItems(categoryId) {
 // ========================
 function agregarACesta(producto, personalizacion = null) {
   // Si hay personalización se adjunta a producto
-  const productoParaCesta = {
-    ...producto,
-    personalizacion,
-  };
+let totalExtras = 0;
+if (personalizacion) {
+  totalExtras = personalizacion.reduce((sum, ing) => sum + ((ing.extra || 0) * 1), 0);
+}
+
+const productoParaCesta = {
+  ...producto,
+  personalizacion,
+  price: parseFloat(producto.price) + totalExtras // 👈 ya con los extras sumados
+};
+
 
   // Verificar si ya existe en la cesta (se compara el id y la personalización)
   const indexExistente = cartItems.findIndex(
@@ -507,7 +514,13 @@ item.personalizacion
     }
     li.innerHTML = `
       ${item.name} x ${item.quantity} ${personalizacionText}
-      <span>€${(item.price * item.quantity).toFixed(2)}</span>
+      let totalExtras = 0;
+if (item.personalizacion) {
+  totalExtras = item.personalizacion.reduce((sum, ing) => sum + ((ing.extra || 0) * 1), 0);
+}
+const precioLinea = (item.price + totalExtras) * item.quantity;
+<span>€${precioLinea.toFixed(2)}</span>
+
     `;
     // Botón para eliminar el producto
     const deleteBtn = document.createElement("button");
