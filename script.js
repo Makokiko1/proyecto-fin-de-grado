@@ -873,7 +873,7 @@ if (!esInvitado) {
       const totalConDescuento = total * 0.7;
       resumenHTML += `
         <div class="alert alert-success mt-2">
-          🎉 ¡Felicidades! En tu próxima visita recibirás un <strong>30% de descuento</strong>.<br/>
+          🎉 ¡Felicidades! En esta  visita recibirás un <strong>30% de descuento</strong>.<br/>
           <strong>Total con descuento: €${totalConDescuento.toFixed(2)}</strong>
         </div>
       `;
