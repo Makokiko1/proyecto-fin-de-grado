@@ -802,10 +802,9 @@ billButton.addEventListener("click", async () => {
   }
 }).join(", ");
 
-// ... después de actualizar descuentos y calcular totalFinal
 
 // Mostrar el mismo resumen que en el botón de resumen
-let resumenHTML = `<h5>🧾 Resumen de pedidos:</h5><ul style="padding-left: 1rem;">`;
+let resumenHTML = `<h5>🧾 Cuenta total:</h5><ul style="padding-left: 1rem;">`;
 
 pedidos.forEach(p => {
   try {
