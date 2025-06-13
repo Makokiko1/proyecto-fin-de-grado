@@ -28,28 +28,41 @@
     </script>
   </head>
   <body class="bg-light d-flex align-items-center justify-content-center vh-100">
-    <div class="d-grid gap-3 mb-4">
+    <div class="card p-4 shadow" style="max-width: 420px; width: 100%;">
       <h2 class="text-center mb-3">Bienvenido</h2>
       <p class="text-center text-muted">Elige cómo quieres acceder</p>
-  <button id="guest-login" class="btn btn-secondary w-100">
-    Continuar como Invitado
-  </button>
-  <button
-    class="btn btn-outline-dark w-100"
-    data-bs-toggle="modal"
-    data-bs-target="#loginLocalModal"
-  >
-    <i class="bi bi-person-fill me-2"></i> Iniciar con Cuenta
-  </button>
-  <button
-    class="btn btn-outline-success w-100"
-    data-bs-toggle="modal"
-    data-bs-target="#registerModal"
-  >
-    <i class="bi bi-pencil-square me-2"></i> Registrarse
-  </button>
-</div>
 
+      <div class="d-grid gap-2 mb-3">
+        <button id="login-google" class="btn btn-outline-danger">
+          <i class="bi bi-google me-2"></i> Iniciar con Google
+        </button>
+        <button id="login-facebook" class="btn btn-outline-primary">
+          <i class="bi bi-facebook me-2"></i> Iniciar con Facebook
+        </button>
+        <button id="guest-login" class="btn btn-secondary">
+          Continuar como Invitado
+        </button>
+      </div>
+
+      <hr />
+
+      <div class="d-grid gap-2">
+        <button
+          class="btn btn-outline-dark"
+          data-bs-toggle="modal"
+          data-bs-target="#loginLocalModal"
+        >
+          <i class="bi bi-person-fill me-2"></i> Iniciar con Cuenta
+        </button>
+        <button
+          class="btn btn-outline-success"
+          data-bs-toggle="modal"
+          data-bs-target="#registerModal"
+        >
+          <i class="bi bi-pencil-square me-2"></i> Registrarse
+        </button>
+      </div>
+    </div>
 
     <!-- Modal: Login Local -->
     <div
