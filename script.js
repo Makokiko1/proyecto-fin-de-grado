@@ -802,63 +802,7 @@ billButton.addEventListener("click", async () => {
   }
 }).join(", ");
 
-
-// Mostrar el mismo resumen que en el botón de resumen
-let resumenHTML = `<h5>🧾 Cuenta total:</h5><ul style="padding-left: 1rem;">`;
-
-pedidos.forEach(p => {
-  try {
-    const items = JSON.parse(p.items);
-    items.forEach(i => {
-      resumenHTML += `<li>${i.name} x${i.quantity} - €${(i.price * i.quantity).toFixed(2)}</li>`;
-    });
-  } catch (e) {
-    resumenHTML += `<li>[items no disponibles]</li>`;
-  }
-});
-
-resumenHTML += `</ul><hr><p><strong>Total actual: €${totalSinDescuento.toFixed(2)}</strong></p>`;
-
-if (!esInvitado && !countErr) {
-  const restantes = 10 - (totalCompletos % 10 || 10);
-  if (restantes === 1) {
-    const totalConDescuento = totalFinal * 0.7;
-    resumenHTML += `
-      <div class="alert alert-success mt-2">
-        🎉 ¡Felicidades! Esta visita tiene un <strong>30% de descuento</strong>.<br/>
-        <strong>Total con descuento: €${totalFinal.toFixed(2)}</strong>
-      </div>
-    `;
-  } else if (restantes > 1) {
-    resumenHTML += `<p>🔁 Te quedan <strong>${restantes}</strong> visita${restantes > 1 ? "s" : ""} para un descuento.</p>`;
-  }
-}
-
-// Mostrar modal 
-const modalAntiguo = document.getElementById("summaryModal");
-if (modalAntiguo) modalAntiguo.remove();
-
-const resumenModal = document.createElement("div");
-resumenModal.innerHTML = `
-  <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content">
-        <div class="modal-header bg-info text-white">
-          <h5 class="modal-title">Resumen del Pedido</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">${resumenHTML}</div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-        </div>
-      </div>
-    </div>
-  </div>
-`;
-document.body.appendChild(resumenModal);
-const bsModal = new bootstrap.Modal(document.getElementById("summaryModal"));
-bsModal.show();
-
+alert(`Has pedido ${resumenPlatos}.\nTotal a pagar: €${totalFinal.toFixed(2)}`);
 
 });
 const summaryButton = document.getElementById("summary-button");
