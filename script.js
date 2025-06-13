@@ -817,7 +817,7 @@ pedidos.forEach(p => {
   }
 });
 
-resumenHTML += `</ul><hr><p><strong>Total actual: €${totalFinal.toFixed(2)}</strong></p>`;
+resumenHTML += `</ul><hr><p><strong>Total actual: €${totalSinDescuento.toFixed(2)}</strong></p>`;
 
 if (!esInvitado && !countErr) {
   const restantes = 10 - (totalCompletos % 10 || 10);
@@ -826,7 +826,7 @@ if (!esInvitado && !countErr) {
     resumenHTML += `
       <div class="alert alert-success mt-2">
         🎉 ¡Felicidades! Esta visita tiene un <strong>30% de descuento</strong>.<br/>
-        <strong>Total con descuento: €${totalConDescuento.toFixed(2)}</strong>
+        <strong>Total con descuento: €${totalFinal.toFixed(2)}</strong>
       </div>
     `;
   } else if (restantes > 1) {
@@ -834,7 +834,7 @@ if (!esInvitado && !countErr) {
   }
 }
 
-// Mostrar modal (lo reutilizas)
+// Mostrar modal 
 const modalAntiguo = document.getElementById("summaryModal");
 if (modalAntiguo) modalAntiguo.remove();
 
