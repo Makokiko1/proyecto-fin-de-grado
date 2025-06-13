@@ -1,0 +1,35 @@
+/* Asegúrate de que el botón tenga esta clase */
+.table-button {
+    /* color de fondo negro */
+    -fx-background-color: #2b2b2b;
+    /* elimina cualquier degradado o inset extra */
+    -fx-background-insets: 0;
+    -fx-background-radius: 12;
+
+    /* borde suave */
+    -fx-border-color: #444444;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+
+    /* texto claro */
+    -fx-text-fill: #EEEEEE;
+}
+
+/* Hover: aclarado ligero y “zoom” */
+.table-button:hover {
+    -fx-background-color: #3a3a3a;
+    -fx-scale: 1.05;
+}
+
+/* Pulsado: breve “pulse” */
+.table-button:pressed {
+    -fx-scale: 0.98;
+}
+/* Estado de pedido pendiente */
+.table-button.order-pending {
+    -fx-background-color: #ffeb3b;    /* amarillo “alerta” */
+    -fx-text-fill: #222222;           /* texto oscuro */
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 12, 0, 0, 4);
+    /* Opcional: fija un ligero “elevado” */
+    -fx-translate-y: -2px;
+}

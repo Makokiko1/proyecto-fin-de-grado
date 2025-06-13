@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import java.lang.String?>
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Pos?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.TextArea?>
+
+<VBox xmlns="http://javafx.com/javafx/19.0.2.1"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.aaron.controllers.DetailController"
+      spacing="8" alignment="TOP_CENTER">
+
+   
+
+    <!-- Cabecera: Mesa + Total -->
+    <HBox spacing="16" alignment="CENTER">
+        <Label text="Mesa:" style="-fx-text-fill: black;" styleClass="detail-label"/>
+        <Label fx:id="mesaLabel" style="-fx-text-fill: black;" styleClass="detail-label-bold"/>
+
+        <Label text="Total mesa:" style="-fx-text-fill: black;" styleClass="detail-label"/>
+        <Label fx:id="totalMesaLabel"
+               text="€0.00"
+               style="-fx-text-fill: black;"
+               styleClass="detail-label-bold"/>
+    </HBox>
+
+    <!-- 1) Tabla de pedidos -->
+    <TableView fx:id="ordersTable" prefHeight="150" prefWidth="600" styleClass="detail-table">
+        <columns>
+            <TableColumn fx:id="orderIdColumn"    text="ID"    prefWidth="50"/>
+            <TableColumn fx:id="orderDateColumn"  text="Fecha" prefWidth="200"/>
+            <TableColumn fx:id="orderStateColumn" text="Estado" prefWidth="150"/>
+        </columns>
+    </TableView>
+
+    <!-- 2) Tabla de líneas -->
+<TableView fx:id="orderTable" prefHeight="200" prefWidth="600" styleClass="detail-table">
+    <columns>
+        <TableColumn fx:id="itemColumn"  text="Artículo"   prefWidth="400"/>
+        <TableColumn fx:id="priceColumn" text="Precio (€)" prefWidth="200"/>
+    </columns>
+</TableView>
+
+<!-- NUEVO: Descripción -->
+<TextArea fx:id="descripcionLabel"
+          editable="false"
+          wrapText="true"
+          maxWidth="600"
+          prefHeight="100"
+          style="-fx-border-color: #aaa; -fx-padding: 10;" />
+
+    <!-- 3) Combo + Botones -->
+    <HBox spacing="10" alignment="CENTER">
+        <ComboBox fx:id="statusComboBox" prefWidth="200" styleClass="form-control"/>
+        <Button   fx:id="stateButton"
+                  text="Cambiar Estado"
+                  onAction="#handleChangeState"
+                  styleClass="table-button"/>
+        <Button   fx:id="closeButton"
+                  text="Cerrar Cuenta"
+                  onAction="#handleCloseBill"
+                  styleClass="table-button"/>
+    </HBox>
+</VBox>
