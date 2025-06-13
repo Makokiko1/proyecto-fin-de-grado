@@ -1,13 +1,9 @@
-/*
-  Este archivo incluye el código existente y las nuevas funciones para que,
-  al pulsar “Añadir”, se abra un modal que permita personalizar el plato
-  (quitando o sumando extras a los ingredientes) antes de agregar a la cesta.
-*/
+
 
 // ========================
 // Configuración de Supabase
 // ========================
-// Al tope de script.js
+
 const urlParams    = new URLSearchParams(window.location.search);
 const mesaParamUrl = urlParams.get("table");
 // si viene en la URL, resérvalo en localStorage
@@ -282,7 +278,7 @@ if (personalizacion) {
 const productoParaCesta = {
   ...producto,
   personalizacion,
-  price: parseFloat(producto.price) + totalExtras // 👈 ya con los extras sumados
+  price: parseFloat(producto.price) + totalExtras // ya con los extras sumados
 };
 
 
@@ -390,7 +386,7 @@ function renderIngredientesPersonalizacion(ingredientesData) {
           } else {
            ingredientesPersonalizados.push({
   ingredienteId: ingrediente.id,
-  nombre: ingrediente.nombre, // 👈 nuevo
+  nombre: ingrediente.nombre, 
   cantidad: ingredienteRel.cantidad_default,
   extra: 0,
 });
@@ -447,7 +443,7 @@ function renderIngredientesPersonalizacion(ingredientesData) {
 if (!ingredientesPersonalizados.find((item) => item.ingredienteId === ingrediente.id)) {
   ingredientesPersonalizados.push({
     ingredienteId: ingrediente.id,
-    nombre: ingrediente.nombre, // ✅ importante
+    nombre: ingrediente.nombre, 
     cantidad: ingredienteRel.cantidad_default,
     extra: 0,
   });
@@ -806,7 +802,64 @@ billButton.addEventListener("click", async () => {
   }
 }).join(", ");
 
-alert(`Has pedido ${resumenPlatos}.\nTotal a pagar: €${totalFinal.toFixed(2)}`);
+// ... después de actualizar descuentos y calcular totalFinal
+
+// Mostrar el mismo resumen que en el botón de resumen
+let resumenHTML = `<h5>🧾 Resumen de pedidos:</h5><ul style="padding-left: 1rem;">`;
+
+pedidos.forEach(p => {
+  try {
+    const items = JSON.parse(p.items);
+    items.forEach(i => {
+      resumenHTML += `<li>${i.name} x${i.quantity} - €${(i.price * i.quantity).toFixed(2)}</li>`;
+    });
+  } catch (e) {
+    resumenHTML += `<li>[items no disponibles]</li>`;
+  }
+});
+
+resumenHTML += `</ul><hr><p><strong>Total actual: €${totalFinal.toFixed(2)}</strong></p>`;
+
+if (!esInvitado && !countErr) {
+  const restantes = 10 - (totalCompletos % 10 || 10);
+  if (restantes === 1) {
+    const totalConDescuento = totalFinal * 0.7;
+    resumenHTML += `
+      <div class="alert alert-success mt-2">
+        🎉 ¡Felicidades! Esta visita tiene un <strong>30% de descuento</strong>.<br/>
+        <strong>Total con descuento: €${totalConDescuento.toFixed(2)}</strong>
+      </div>
+    `;
+  } else if (restantes > 1) {
+    resumenHTML += `<p>🔁 Te quedan <strong>${restantes}</strong> visita${restantes > 1 ? "s" : ""} para un descuento.</p>`;
+  }
+}
+
+// Mostrar modal (lo reutilizas)
+const modalAntiguo = document.getElementById("summaryModal");
+if (modalAntiguo) modalAntiguo.remove();
+
+const resumenModal = document.createElement("div");
+resumenModal.innerHTML = `
+  <div class="modal fade" id="summaryModal" tabindex="-1" aria-labelledby="summaryModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-info text-white">
+          <h5 class="modal-title">Resumen del Pedido</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">${resumenHTML}</div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
+document.body.appendChild(resumenModal);
+const bsModal = new bootstrap.Modal(document.getElementById("summaryModal"));
+bsModal.show();
+
 
 });
 const summaryButton = document.getElementById("summary-button");
